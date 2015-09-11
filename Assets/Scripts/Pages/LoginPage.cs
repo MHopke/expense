@@ -10,6 +10,8 @@ using Parse;
 public class LoginPage : UIView 
 {
 	#region Public Vars
+	public ExtendedInputField UsernameField;
+	public ExtendedInputField PasswordField;
 	#endregion
 
 	#region UI Methods
@@ -22,25 +24,25 @@ public class LoginPage : UIView
 	#region Coroutines
 	IEnumerator Login()
 	{
-		Task<ParseUser> task = ParseUser.LogInAsync("anyafrans","momentum1");
+		Task<ParseUser> task = ParseUser.LogInAsync(UsernameField.Text,PasswordField.Text);
+
+		LoadAlert.Instance.StartLoad("Logging in...");
 
 		while(!task.IsCompleted)
 			yield return null;
 
-		/*ParseACL acl = new ParseACL();
-		acl.PublicReadAccess = true;
-		acl.PublicWriteAccess = true;
-		
-		ParseRole role = new ParseRole("Momentum Media PR",acl);
+		LoadAlert.Instance.Done();
 
-		role.Users.Add(ParseUser.CurrentUser);
+		if(task.IsFaulted || task.Exception != null)
+		{
+			Debug.Log("error");
+		}
+		else
+		{
+			PasswordField.Text = UsernameField.Text = "";
 
-		Task save = role.SaveAsync();
-
-		while(!save.IsCompleted)
-			yield return null;
-
-		Debug.Log("saved");*/
+			Deactivate();
+		}
 	}
 	#endregion
 }

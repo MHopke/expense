@@ -9,7 +9,8 @@ public class Project : ParseObject
 	#region Constants
 	const string NAME = "Name";
 	const string DESCRIPTION = "Description";
-	const string COMPANY = "Company";
+	const string ITEM_COUNT = "ItemCount";
+	const string CLIENT = "Client";
 	#endregion
 
 	#region Constructors
@@ -31,11 +32,18 @@ public class Project : ParseObject
 		set { SetProperty<string>(value,DESCRIPTION); }
 	}
 
-	[ParseFieldName("company")]
-	public Client Company
+	[ParseFieldName("itemCount")]
+	public int ItemCount
 	{
-		get { return GetProperty<Client>(COMPANY); }
-		set { SetProperty<Client>(value,COMPANY); }
+		get { return GetProperty<int>(ITEM_COUNT); }
+		set { SetProperty<int>(value,ITEM_COUNT); }
+	}
+
+	[ParseFieldName("client")]
+	public Client Client
+	{
+		get { return GetProperty<Client>(CLIENT); }
+		set { SetProperty<Client>(value,CLIENT); }
 	}
 	#endregion
 }

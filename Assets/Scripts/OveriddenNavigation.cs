@@ -19,14 +19,28 @@ public class OveriddenNavigation : AppNavigationController
 
 		base.OnActivate ();
 
+		//ParseUser.LogOut();
+
 		if(ParseUser.CurrentUser == null)
 		{
+			Login.deactivatedEvent += LoggedIn;
 			CurrentView = Login;
+			PresentUIView(CurrentView);
 		}
 		else
 		{
-			CurrentView = _homeView;
+			LoggedIn();
 		}
+	}
+	#endregion
+
+	#region Event Listeners
+	void LoggedIn()
+	{
+		Login.deactivatedEvent -= LoggedIn;
+
+		CurrentView = _homeView;
+		User.Init();
 
 		PresentUIView(CurrentView);
 	}
