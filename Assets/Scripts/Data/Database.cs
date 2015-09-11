@@ -108,6 +108,30 @@ public class Database : MonoBehaviour
 		if(initialized != null)
 			initialized();
 	}
+	public IEnumerator GetExpenses(Project project, System.Action<IEnumerable<Expense>> callback)
+	{
+		LoadAlert.Instance.StartLoad("Getting Expenses...",null,-1);
+
+		ParseQuery<Expense> query = new ParseQuery<Expense>();//.WhereEqualTo(Expense.PROJECT,project);
+
+		query = query.Limit(200);
+
+		Task<IEnumerable<Expense>> task = query.FindAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		Debug.Log(task.Result.Count());
+
+		if(task.IsFaulted || task.Exception != null)
+		{
+			Debug.Log("error getting expenses:\n" + task.Exception.ToString());
+		}
+		else if(callback != null)
+			callback(task.Result);
+	}
 	#endregion
 
 	#region Properties

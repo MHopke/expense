@@ -6,23 +6,23 @@ using System.Collections.Generic;
 using Parse;
 
 [ParseClassName("Expense")]
-public class ExpenseItem : ParseObject 
+public class Expense : ParseObject 
 {
 	#region Constants
 	const string NAME = "Name";
 	const string DESCRIPTION = "Description";
 	const string DATE = "Date";
 	const string VALUE = "Value";
-	const string TAGS = "Tags";
+	public const string TAGS = "Tags";
 	const string IMAGE = "File";
 	const string BILLABLE = "Billable";
 	const string REIMBURSEMENT = "Reimbursement";
-	const string PROJECT = "Project";
+	public const string PROJECT = "Project";
 	const string USER = "User";
 	#endregion
 
 	#region Constructors
-	public ExpenseItem(){}
+	public Expense(){}
 	#endregion
 
 	#region Properties

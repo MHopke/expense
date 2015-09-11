@@ -8,6 +8,7 @@ public class User
 {
 	#region Constants
 	const string COMPANY_NAME = "roleName";
+	const string NAME = "name";
 	#endregion
 
 	#region Public Vars
@@ -26,6 +27,11 @@ public class User
 	{
 		get { return (string)ParseUser.CurrentUser[COMPANY_NAME]; }
 		set { ParseUser.CurrentUser[COMPANY_NAME] = value; }
+	}
+	public string Name
+	{
+		get { return (string)ParseUser.CurrentUser[NAME]; }
+		set { ParseUser.CurrentUser[NAME] = value; }
 	}
 	#endregion
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 using Parse;
 
@@ -9,7 +9,7 @@ public class ExtraParseInitializer : MonoBehaviour
 	{
 		ParseObject.RegisterSubclass<Client>();
 		ParseObject.RegisterSubclass<Project>();
-		ParseObject.RegisterSubclass<ExpenseItem>();
+		ParseObject.RegisterSubclass<Expense>();
 	}
 	#endregion
 }

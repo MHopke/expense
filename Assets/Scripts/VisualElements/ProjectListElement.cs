@@ -152,7 +152,7 @@ public class ProjectListElement : VisualElement
 	#endregion
 	
 	#region Event Listeners
-	void ExpenseCreated(ExpenseItem item)
+	void ExpenseCreated(Expense item)
 	{
 		if(item.Project == _project)
 			SetProjectCount();

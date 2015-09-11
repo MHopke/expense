@@ -14,7 +14,7 @@ using Parse;
 public class ExpenseAlert : UIView 
 {
 	#region Events
-	public static event Action<ExpenseItem> createdExpense;
+	public static event Action<Expense> createdExpense;
 	#endregion
 
 	#region Public Vars
@@ -22,7 +22,7 @@ public class ExpenseAlert : UIView
 	#endregion
 
 	#region Private Vars
-	ExpenseItem _item;
+	Expense _item;
 	#endregion
 
 	#region Overidden Methods
@@ -52,8 +52,6 @@ public class ExpenseAlert : UIView
 		DateTime temp = DateTime.Now;
 		if(DateTime.TryParse(date, out temp))
 			_item.Date = temp;
-
-		Debug.Log(temp);
 	}
 	public void ValueChaned(string value)
 	{
@@ -85,7 +83,7 @@ public class ExpenseAlert : UIView
 	#region Methods
 	public void Open(Project project)
 	{
-		_item = new ExpenseItem() { Project = project, User = ParseUser.CurrentUser };
+		_item = new Expense() { Project = project, User = ParseUser.CurrentUser };
 		_item.ACL = new ParseACL();
 		_item.ACL.SetRoleReadAccess(User.CurrentUser.CompanyName,true);
 		_item.ACL.SetRoleWriteAccess(User.CurrentUser.CompanyName,true);
