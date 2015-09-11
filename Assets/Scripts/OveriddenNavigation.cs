@@ -24,8 +24,7 @@ public class OveriddenNavigation : AppNavigationController
 		if(ParseUser.CurrentUser == null)
 		{
 			Login.deactivatedEvent += LoggedIn;
-			CurrentView = Login;
-			PresentUIView(CurrentView);
+			PresentUIView(Login);
 		}
 		else
 		{
@@ -39,10 +38,11 @@ public class OveriddenNavigation : AppNavigationController
 	{
 		Login.deactivatedEvent -= LoggedIn;
 
-		CurrentView = _homeView;
 		User.Init();
 
-		PresentUIView(CurrentView);
+		PresentUIView(_homeView);
+
+		//_viewStack.Push(_homeView);
 	}
 	#endregion
 }

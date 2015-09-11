@@ -54,7 +54,7 @@ public class AppNavigationController : UIViewController
 
     //NavigationState _navState;
 
-    Stack<UIView> _viewStack;
+    protected Stack<UIView> _viewStack;
     #endregion
 
     #region Overriden Methods
@@ -83,7 +83,7 @@ public class AppNavigationController : UIViewController
     }
     protected override void OnPresent(UIView view)
     {
-        if (CurrentView.name == view.name)
+        if (CurrentView && CurrentView.name == view.name)
             return;
 
         base.OnPresent(view);

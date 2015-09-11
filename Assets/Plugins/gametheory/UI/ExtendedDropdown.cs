@@ -9,6 +9,41 @@ namespace gametheory.UI
 		public Dropdown Dropdown;
         #endregion
         
+		#region Overridden Methods
+		public override void PresentVisuals (bool display)
+		{
+			base.PresentVisuals (display);
+
+			if(Dropdown)
+			{
+				Dropdown.enabled = display;
+
+				if(Dropdown.image)
+					Dropdown.image.enabled = display;
+
+				if(Dropdown.captionText)
+					Dropdown.captionText.enabled = display;
+
+				if(Dropdown.captionImage)
+					Dropdown.captionImage.enabled = display;
+			}
+		}
+		protected override void Disabled ()
+		{
+			base.Disabled ();
+
+			if(Dropdown)
+				Dropdown.interactable = false;
+		}
+		protected override void Enabled ()
+		{
+			base.Enabled ();
+
+			if(Dropdown)
+				Dropdown.interactable = true;
+		}
+		#endregion
+
         #region Methods
         public void Initialize(List<string> items, int selection)
         {

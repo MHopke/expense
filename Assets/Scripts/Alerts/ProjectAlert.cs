@@ -10,7 +10,7 @@ using gametheory.UI;
 public class ProjectAlert : UIView 
 {
 	#region Events
-	public static event System.Action<Client> projectCreated;
+	public static event System.Action<Project> projectCreated;
 	#endregion
 
 	#region Public Vars
@@ -111,7 +111,7 @@ public class ProjectAlert : UIView
 			Database.Instance.AddProject(_project);
 			
 			if(projectCreated != null)
-				projectCreated(_project.Client);
+				projectCreated(_project);
 
 			_project = null;
 			

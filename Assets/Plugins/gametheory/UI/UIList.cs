@@ -11,8 +11,6 @@ namespace gametheory.UI
         public bool ZeroScrollBar;
         public bool HideScrollBar;
 
-        public RectTransform LiistTransform;
-
         public VisualElement EmptyListItem;
         public Text DefaultListItemText;
 
@@ -109,7 +107,7 @@ namespace gametheory.UI
         {
             DeactivateEmptyItem();
 
-            (element.transform as RectTransform).SetParent(LiistTransform,false);
+            (element.transform as RectTransform).SetParent(Scroll.content,false);
             ListItems.Add(element);
 
             element.Init();
@@ -127,7 +125,7 @@ namespace gametheory.UI
 
             for(int i = 0; i < elements.Count; i++)
             {
-                (elements[i].transform as RectTransform).SetParent(LiistTransform,false);
+				(elements[i].transform as RectTransform).SetParent(Scroll.content,false);
                 ListItems.Add(elements[i]);
 
                 elements[i].Init();

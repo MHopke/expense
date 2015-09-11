@@ -46,9 +46,6 @@ public class HomePage : UIView
 	#endregion
 
 	#region UI Methods
-	public void CreateProject()
-	{
-	}
 	public void CreateClient()
 	{
 		ClientAlert.Instance.Open();
