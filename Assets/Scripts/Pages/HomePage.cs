@@ -7,6 +7,12 @@ using gametheory.UI;
 
 public class HomePage : UIView 
 {
+	#region UI Methods
+	public void CreateProject()
+	{
+	}
+	#endregion
+
 	#region Methods
 	public void CreateCompany()
 	{
