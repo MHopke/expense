@@ -17,6 +17,8 @@ public class ClientListElement : VisualElement
 	public Text ViewText;
 	public Text NewText;
 
+	public Image Background;
+
 	public Button ViewButton;
 	public Button NewButton;
 	#endregion
@@ -51,6 +53,9 @@ public class ClientListElement : VisualElement
 
 		if(NewText)
 			NewText.enabled = display;
+
+		if(Background)
+			Background.enabled = display;
 
 		if(ViewButton)
 		{

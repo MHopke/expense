@@ -25,7 +25,6 @@ public class ClientPage : UIView
 	protected override void OnInit ()
 	{
 		base.OnInit ();
-
 		Instance = this;
 	}
 	protected override void OnCleanUp ()
@@ -35,9 +34,8 @@ public class ClientPage : UIView
 	}
 	protected override void OnActivate ()
 	{
-		ProjectList.ClearElements();
 		ProjectAlert.projectCreated += AddProject;
-		base.Activate();
+		base.OnActivate();
 	}
 	protected override void OnDeactivate ()
 	{
@@ -56,6 +54,8 @@ public class ClientPage : UIView
 	#region Methods
 	public void Setup(Client client)
 	{
+		ProjectList.ClearElements();
+
 		_client = client;
 
 		Name.text = client.Name;

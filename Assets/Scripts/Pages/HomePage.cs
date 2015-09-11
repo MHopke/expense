@@ -12,6 +12,7 @@ public class HomePage : UIView
 {
 	#region Public Vars
 	public UIList ClientList;
+	public ClientPage ClientPage;
 
 	public ClientListElement ClientPrefab;
 	#endregion

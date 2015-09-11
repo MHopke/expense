@@ -18,6 +18,8 @@ public class ProjectListElement : VisualElement
 	public Text ViewText;
 	public Text NewText;
 	public Text ReportText;
+
+	public Image Background;
 	
 	public Button ViewButton;
 	public Button ReportButton;
@@ -32,17 +34,22 @@ public class ProjectListElement : VisualElement
 	protected override void OnInit ()
 	{
 		base.OnInit ();
+		ExpenseAlert.createdExpense += ExpenseCreated;
 	}
 	protected override void OnCleanUp ()
 	{
 		base.OnCleanUp ();
+		ExpenseAlert.createdExpense -= ExpenseCreated;
 	}
 	public override void PresentVisuals (bool display)
 	{
 		base.PresentVisuals (display);
-		
+
 		if(Name)
 			Name.enabled = display;
+
+		if(Description)
+			Description.enabled = display;
 		
 		if(ItemCount)
 			ItemCount.enabled = display;
@@ -55,7 +62,10 @@ public class ProjectListElement : VisualElement
 
 		if(ReportText)
 			ReportText.enabled = display;
-		
+
+		if(Background)
+			Background.enabled = display;
+
 		if(ViewButton)
 		{
 			ViewButton.enabled = display;
@@ -115,11 +125,13 @@ public class ProjectListElement : VisualElement
 	}
 	public void ViewProject()
 	{
-		//ClientPage.Instance.Setup(_project);
 		OveriddenNavigation.Navigation.PushViewOnToStack(ProjectPage.Instance);
+		ProjectPage.Instance.Setup(_project);
+		//ClientPage.Instance.Setup(_project);
 	}
 	public void CreateExpense()
 	{
+		ExpenseAlert.Instance.Open(_project);
 	}
 	#endregion
 	
@@ -140,9 +152,9 @@ public class ProjectListElement : VisualElement
 	#endregion
 	
 	#region Event Listeners
-	void ExpenseCreated(Project project)
+	void ExpenseCreated(ExpenseItem item)
 	{
-		if(project == _project)
+		if(item.Project == _project)
 			SetProjectCount();
 	}
 	#endregion

@@ -133,7 +133,7 @@ public class AppNavigationController : UIViewController
             //AlertView.Present(_backConfirmTitle, _backConfirmInfo, Confirm, Cancel,true);
             return;
         }
-        
+
         if (CurrentView.name == view.name)
             return;
         
