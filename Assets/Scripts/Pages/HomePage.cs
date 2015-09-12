@@ -51,6 +51,10 @@ public class HomePage : UIView
 	{
 		ClientAlert.Instance.Open();
 	}
+	public void Logout()
+	{
+		ParseUser.LogOutAsync();
+	}
 	#endregion
 
 	#region Methods

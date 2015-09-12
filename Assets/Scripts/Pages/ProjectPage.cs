@@ -49,6 +49,7 @@ public class ProjectPage : UIView
 	#region Methods
 	public void Setup(Project project)
 	{
+		ExpenseList.ClearElements();
 		_project = project;
 
 		Name.text = project.Name;

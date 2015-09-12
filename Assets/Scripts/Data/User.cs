@@ -8,7 +8,7 @@ public class User
 {
 	#region Constants
 	const string COMPANY_NAME = "roleName";
-	const string NAME = "name";
+	public const string NAME = "name";
 	#endregion
 
 	#region Public Vars

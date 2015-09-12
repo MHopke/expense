@@ -112,7 +112,7 @@ public class Database : MonoBehaviour
 	{
 		LoadAlert.Instance.StartLoad("Getting Expenses...",null,-1);
 
-		ParseQuery<Expense> query = new ParseQuery<Expense>();//.WhereEqualTo(Expense.PROJECT,project);
+		ParseQuery<Expense> query = new ParseQuery<Expense>().WhereEqualTo("project",project).Include("user");
 
 		query = query.Limit(200);
 
@@ -122,8 +122,6 @@ public class Database : MonoBehaviour
 			yield return null;
 
 		LoadAlert.Instance.Done();
-
-		Debug.Log(task.Result.Count());
 
 		if(task.IsFaulted || task.Exception != null)
 		{

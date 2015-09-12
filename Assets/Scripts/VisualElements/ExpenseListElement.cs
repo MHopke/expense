@@ -85,7 +85,7 @@ public class ExpenseListElement : VisualElement
 		Date.text = item.Date.ToShortDateString();
 		Value.text = item.Value.ToString();
 
-		UserText.text = USER_PREFIX + User.CurrentUser.Name;
+		UserText.text = USER_PREFIX + item.User[User.NAME];
 
 		Billable.isOn = item.Billable;
 		Reimbursement.isOn = item.Reimbursement;
