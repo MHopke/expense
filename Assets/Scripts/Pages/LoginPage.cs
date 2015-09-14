@@ -30,7 +30,7 @@ public class LoginPage : UIView
 	{
 		Task task = null;
 
-		if(_signup)
+		if(!_signup)
 		{
 			task = ParseUser.LogInAsync(UsernameField.Text,PasswordField.Text);
 			LoadAlert.Instance.StartLoad("Logging in...");
@@ -55,7 +55,7 @@ public class LoginPage : UIView
 
 		if(task.IsFaulted || task.Exception != null)
 		{
-			Debug.Log("error");
+			Debug.Log("error:\n" + task.Exception.ToString());
 		}
 		else
 		{

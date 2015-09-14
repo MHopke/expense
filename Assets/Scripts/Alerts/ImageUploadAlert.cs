@@ -7,6 +7,8 @@ using System.Collections;
 
 using gametheory.UI;
 
+using Prime31;
+
 public class ImageUploadAlert : UIView 
 {
 	#region Events
@@ -29,10 +31,16 @@ public class ImageUploadAlert : UIView
 	{
 		base.OnInit ();
 		Instance = this;
+#if UNITY_IPHONE
+		EtceteraManager.imagePickerChoseImageEvent += Open;
+#endif
 	}
 	protected override void OnCleanUp ()
 	{
 		Instance = null;
+#if UNITY_IPHONE
+			EtceteraManager.imagePickerChoseImageEvent -= Open;
+#endif
 		base.OnCleanUp ();
 	}
 	#endregion

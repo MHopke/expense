@@ -11,6 +11,8 @@ using gametheory.UI;
 
 using Parse;
 
+using Prime31;
+
 public class ExpenseAlert : UIView 
 {
 	#region Events
@@ -90,7 +92,11 @@ public class ExpenseAlert : UIView
 	}
 	public void UploadImage()
 	{
+#if UNITY_IPHONE && !UNITY_EDITOR
+		EtceteraBinding.promptForPhoto(0.8f);
+#else
 		UniFileBrowser.use.OpenFileWindow(ImageUploadAlert.Instance.Open);
+#endif
 	}
 	#endregion
 
@@ -159,7 +165,7 @@ public class ExpenseAlert : UIView
 	}
 	#endregion
 
-	#region UniFileBrowser
+	#region EventListeners
 	void FileSelected(byte[] data)
 	{
 		LoadAlert.Instance.StartLoad("Uploading Image...",null,-1);
