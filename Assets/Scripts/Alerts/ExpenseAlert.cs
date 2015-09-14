@@ -36,6 +36,16 @@ public class ExpenseAlert : UIView
 		Instance = null;
 		base.OnCleanUp ();
 	}
+	protected override void OnActivate ()
+	{
+		base.OnActivate ();
+		ImageUploadAlert.uploadFile += FileSelected;
+	}
+	protected override void OnDeactivate ()
+	{
+		ImageUploadAlert.uploadFile -= FileSelected;
+		base.OnDeactivate ();
+	}
 	#endregion
 
 	#region UI Methods
@@ -77,6 +87,10 @@ public class ExpenseAlert : UIView
 	public void Submit()
 	{
 		StartCoroutine(CreateExpense());
+	}
+	public void UploadImage()
+	{
+		UniFileBrowser.use.OpenFileWindow(ImageUploadAlert.Instance.Open);
 	}
 	#endregion
 
@@ -130,6 +144,26 @@ public class ExpenseAlert : UIView
 				Debug.Log("error occured. UI may not be updated:\n"+task.Exception);
 			}
 		}
+	}
+	IEnumerator UploadFile(byte[] data)
+	{
+		ParseFile file = new ParseFile(_item.Name +".png",data);
+		Task task = file.SaveAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		_item.Image = file;
+
+		LoadAlert.Instance.Done();
+	}
+	#endregion
+
+	#region UniFileBrowser
+	void FileSelected(byte[] data)
+	{
+		LoadAlert.Instance.StartLoad("Uploading Image...",null,-1);
+		StartCoroutine(UploadFile(data));
 	}
 	#endregion
 }

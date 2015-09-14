@@ -121,6 +121,8 @@ public class ProjectListElement : VisualElement
 	#region UI Methods
 	public void GenerateReport()
 	{
+		OveriddenNavigation.Navigation.PushViewOnToStack(ReportPage.Instance);
+		ReportPage.Instance.Setup(_project);
 		//ProjectAlert.Instance.Open(_project);
 	}
 	public void ViewProject()

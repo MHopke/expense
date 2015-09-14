@@ -14,7 +14,7 @@ public class Expense : ParseObject
 	const string DATE = "Date";
 	const string VALUE = "Value";
 	public const string TAGS = "Tags";
-	const string IMAGE = "File";
+	const string IMAGE = "Image";
 	const string BILLABLE = "Billable";
 	const string REIMBURSEMENT = "Reimbursement";
 	public const string PROJECT = "Project";

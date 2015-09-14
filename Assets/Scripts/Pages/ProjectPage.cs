@@ -49,13 +49,16 @@ public class ProjectPage : UIView
 	#region Methods
 	public void Setup(Project project)
 	{
-		ExpenseList.ClearElements();
-		_project = project;
+		if(_project == null || _project.ObjectId != project.ObjectId)
+		{
+			ExpenseList.ClearElements();
+			_project = project;
 
-		Name.text = project.Name;
-		Description.text = project.Description;
+			Name.text = project.Name;
+			Description.text = project.Description;
 
-		StartCoroutine(Database.Instance.GetExpenses(_project,ProcessExpenses));
+			StartCoroutine(Database.Instance.GetExpenses(_project,ProcessExpenses));
+		}
 	}
 	#endregion
 

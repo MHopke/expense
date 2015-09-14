@@ -19,6 +19,7 @@ public class ExpenseListElement : VisualElement
 	public Text Date;
 	public Text Value;
 	public Text UserText;
+	public RawImage Image;
 	
 	public Image Background;
 
@@ -46,6 +47,9 @@ public class ExpenseListElement : VisualElement
 		
 		if(UserText)
 			UserText.enabled = display;
+
+		if(Image)
+			Image.enabled = display;
 		
 		if(Billable)
 		{
@@ -89,6 +93,25 @@ public class ExpenseListElement : VisualElement
 
 		Billable.isOn = item.Billable;
 		Reimbursement.isOn = item.Reimbursement;
+
+		if(item.Image != null)
+			StartCoroutine(LoadImage());
+	}
+	#endregion
+
+	#region Coroutines
+	IEnumerator LoadImage()
+	{
+		WWW request = new WWW(_item.Image.Url.AbsoluteUri);
+
+		while(!request.isDone)
+			yield return null;
+
+		Texture2D tex = new Texture2D(1,1);
+
+		request.LoadImageIntoTexture(tex);
+
+		Image.texture = tex;
 	}
 	#endregion
 }
