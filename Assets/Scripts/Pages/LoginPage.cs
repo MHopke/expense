@@ -15,7 +15,7 @@ public class LoginPage : UIView
 	#endregion
 
 	#region Private Vars
-	bool _signup = true;
+	bool _signup;
 	#endregion
 
 	#region UI Methods
