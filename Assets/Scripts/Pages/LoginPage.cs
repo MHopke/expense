@@ -66,6 +66,14 @@ public class LoginPage : UIView
 	{
 		StartCoroutine(CreateTeamCoroutine(name));
 	}
+	void TeamUpdated(ParseRole role)
+	{
+		User.CurrentUser.CurrentTeam = role;
+		
+		Debug.Log("updated company");
+		
+		Deactivate();
+	}
 	#endregion
 
 	#region Coroutines
@@ -80,10 +88,11 @@ public class LoginPage : UIView
 		}
 		else
 		{
+			string username = UsernameField.Text.ToLower();
 			ParseUser user = new ParseUser()
 			{
-				Username = UsernameField.Text,
-				Email = UsernameField.Text,
+				Username = username,
+				Email = username,
 				Password = PasswordField.Text
 			};
 			user[User.NAME] = NameField.Text;
@@ -158,9 +167,7 @@ public class LoginPage : UIView
 				}
 				else
 				{
-					Debug.Log("updated company");
-					
-					Deactivate();
+					TeamUpdated(task.Result);
 				}
 			}
 		}
@@ -198,7 +205,7 @@ public class LoginPage : UIView
 			}
 			else
 			{
-				Deactivate();
+				TeamUpdated(role);
 			}
 		}
 	}

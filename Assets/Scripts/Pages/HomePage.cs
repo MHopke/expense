@@ -55,6 +55,11 @@ public class HomePage : UIView
 	{
 		ParseUser.LogOutAsync();
 	}
+	public void InviteTeammate()
+	{
+		SingleInputAlert.Instance.Present("Invite Teammate","Enter the " +
+			"email of the person you'd like to invite.","",EmailEntered,null,true);
+	}
 	#endregion
 
 	#region Methods
@@ -65,6 +70,34 @@ public class HomePage : UIView
 		acl.PublicWriteAccess = true;
 
 		ParseRole role = new ParseRole("Momentum Media PR",acl);*/
+	}
+	#endregion
+
+	#region Coroutines
+	IEnumerator InviteTeammateCoroutine(string email)
+	{
+		yield return null;
+		/*ParseQuery<ParseUser> query = new ParseQuery<ParseUser>().WhereEqualTo("email",email);
+
+		Task<ParseUser> task = query.FirstAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		if(task.IsFaulted)
+		{
+			DefaultAlert.Present("Error!","Sorry that user doesn't exist!");
+		}
+		else
+		{
+			//only add members who don't have a team
+			if(string.IsNullOrEmpty(task.Result[User.COMPANY_NAME]))
+			{
+				task.Result[User.COMPANY_NAME] = User.CurrentUser.CurrentTeam.Name;
+
+
+			}
+		}*/
 	}
 	#endregion
 
@@ -84,6 +117,10 @@ public class HomePage : UIView
 		element.Setup(client);
 		
 		ClientList.AddListElement(element);
+	}
+	void EmailEntered(string email)
+	{
+		StartCoroutine(InviteTeammateCoroutine(email.ToLower()));
 	}
 	#endregion
 }

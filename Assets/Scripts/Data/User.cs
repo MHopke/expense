@@ -7,11 +7,12 @@ using Parse;
 public class User
 {
 	#region Constants
-	const string COMPANY_NAME = "roleName";
+	public const string COMPANY_NAME = "roleName";
 	public const string NAME = "name";
 	#endregion
 
 	#region Public Vars
+	public ParseRole CurrentTeam;
 	public static User CurrentUser;
 	#endregion
 
