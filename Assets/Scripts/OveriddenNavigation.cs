@@ -28,6 +28,8 @@ public class OveriddenNavigation : AppNavigationController
 		}
 		else
 		{
+			//initialize the user here if Parse is already logged in
+			User.Init();
 			LoggedIn();
 		}
 	}
@@ -37,8 +39,6 @@ public class OveriddenNavigation : AppNavigationController
 	void LoggedIn()
 	{
 		Login.deactivatedEvent -= LoggedIn;
-
-		User.Init();
 
 		PresentUIView(_homeView);
 
