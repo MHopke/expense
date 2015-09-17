@@ -10,6 +10,12 @@ using gametheory.UI;
 
 public class HomePage : UIView 
 {
+	#region Constants
+	const string FROM_EMAIL = "gametheoryco@gmail.com";
+
+	const int PASSWORD_LENGTH = 8;
+	#endregion
+
 	#region Public Vars
 	public UIList ClientList;
 	public ClientPage ClientPage;
@@ -71,13 +77,40 @@ public class HomePage : UIView
 
 		ParseRole role = new ParseRole("Momentum Media PR",acl);*/
 	}
+	string GenerateTempPassword()
+	{
+		return System.Guid.NewGuid().ToString().Substring(0,PASSWORD_LENGTH);
+	}
 	#endregion
 
 	#region Coroutines
-	IEnumerator InviteTeammateCoroutine(string email)
+	IEnumerator CreateTeammate(string email)
 	{
-		yield return null;
-		/*ParseQuery<ParseUser> query = new ParseQuery<ParseUser>().WhereEqualTo("email",email);
+		LoadAlert.Instance.StartLoad("Inviting Teammate...",null,-1);
+		string pass = GenerateTempPassword();
+
+		IDictionary<string,object> userDict = new Dictionary<string, object>();
+		userDict.Add("email",email);
+		userDict.Add("password",pass);
+		userDict.Add("team",User.CurrentUser.CompanyName);
+		Task<IDictionary<string,object>> inviteTask = ParseCloud.CallFunctionAsync<IDictionary<string,object>>("inviteUser",userDict);
+
+		while(!inviteTask.IsCompleted)
+			yield return null;
+
+		if(inviteTask.IsFaulted)
+		{
+			LoadAlert.Instance.Done();
+			Debug.Log("creating teammate failed:\n" + inviteTask.Exception.ToString());
+		}
+		else
+		{
+			StartCoroutine(GetNewUser(email,pass));
+		}
+	}
+	IEnumerator GetNewUser(string email, string pass)
+	{
+		ParseQuery<ParseUser> query = new ParseQuery<ParseUser>().WhereEqualTo("username",email);
 
 		Task<ParseUser> task = query.FirstAsync();
 
@@ -86,18 +119,50 @@ public class HomePage : UIView
 
 		if(task.IsFaulted)
 		{
-			DefaultAlert.Present("Error!","Sorry that user doesn't exist!");
+			Debug.Log("couldn't find user:\n" + task.Exception.ToString());
 		}
 		else
 		{
-			//only add members who don't have a team
-			if(string.IsNullOrEmpty(task.Result[User.COMPANY_NAME]))
+			User.CurrentUser.CurrentTeam.Users.Add(task.Result);
+
+			Task save = User.CurrentUser.CurrentTeam.SaveAsync();
+
+			while(!save.IsCompleted)
+				yield return null;
+
+			if(task.IsFaulted)
 			{
-				task.Result[User.COMPANY_NAME] = User.CurrentUser.CurrentTeam.Name;
-
-
+				Debug.Log("failed to update role:\n" + task.Exception.ToString());
 			}
-		}*/
+			else
+				StartCoroutine(SendEmail(email,pass));
+		}
+	}
+	IEnumerator SendEmail(string email,string pass)
+	{
+		IDictionary<string,object> dict = new Dictionary<string, object>();
+		dict.Add("toEmail",email);
+		dict.Add("fromEmail",FROM_EMAIL);
+		dict.Add("text","You've been invited to join " + User.CurrentUser.CompanyName + ".\n" +
+		         "Please download the Expense.It app, and use the following temporary credentials:\n" +
+		         "Account: " + email + "\nPassword: " + pass);
+		dict.Add("subject","Expense.It - You've been invited to join " + User.CurrentUser.CompanyName);
+		
+		Task cloudTask = ParseCloud.CallFunctionAsync<IDictionary<string,object>>("sendMail",dict);
+		
+		while(!cloudTask.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(cloudTask.IsFaulted)
+		{
+			Debug.Log("sending invite email failed:\n" + cloudTask.Exception.ToString());
+		}
+		else
+		{
+			Debug.Log("email send!");
+		}
 	}
 	#endregion
 
@@ -120,7 +185,7 @@ public class HomePage : UIView
 	}
 	void EmailEntered(string email)
 	{
-		StartCoroutine(InviteTeammateCoroutine(email.ToLower()));
+		StartCoroutine(CreateTeammate(email.ToLower()));
 	}
 	#endregion
 }

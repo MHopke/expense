@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 
+using System.Linq;
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Parse;
 
-public class User
+public class User : MonoBehaviour
 {
 	#region Constants
 	public const string COMPANY_NAME = "roleName";
@@ -16,10 +19,108 @@ public class User
 	public static User CurrentUser;
 	#endregion
 
-	#region Methods
-	public static void Init()
+	#region Unity Methods
+	void Awake()
 	{
-		CurrentUser = new User();
+		if(CurrentUser == null)
+		{
+			CurrentUser = this;
+			DontDestroyOnLoad(gameObject);
+		}
+		else
+			Destroy(gameObject);
+	}
+	#endregion
+
+	#region Methods
+	public void GetData()
+	{
+		StartCoroutine(GetRole());
+	}
+	void CreateTeam(string name)
+	{
+		StartCoroutine(CreateTeamCoroutine(name));
+	}
+	void TeamUpdated(ParseRole role)
+	{
+		CurrentTeam = role;
+	}
+	#endregion
+
+	#region Coroutines
+	IEnumerator GetRole()
+	{
+		if(string.IsNullOrEmpty(Name))
+		{
+			//enter information here
+		}
+
+		LoadAlert.Instance.StartLoad("Checking for existing team...",null,-1);
+		ParseQuery<ParseRole> query = new ParseQuery<ParseRole>();
+		
+		Task<ParseRole> task = query.FirstAsync();
+		
+		while(!task.IsCompleted)
+			yield return null;
+		
+		LoadAlert.Instance.Done();
+		
+		if(task.IsFaulted || task.Exception != null)
+		{
+			using (IEnumerator<System.Exception> enumerator = task.Exception.InnerExceptions.GetEnumerator()) 
+			{
+				if (enumerator.MoveNext()) {
+					ParseException error = (ParseException) enumerator.Current;
+					// error.Message will contain an error message
+					// error.Code will return "OtherCause"
+					
+					if(error.Code == ParseException.ErrorCode.ObjectNotFound)
+						SingleInputAlert.Instance.Present("Create Team","It looks like your not on " +
+						                                  "a team, please take the time to make one.","",CreateTeam,null);
+				}
+			}
+		}
+		else
+		{
+			TeamUpdated(task.Result);
+		}
+	}
+	IEnumerator CreateTeamCoroutine(string name)
+	{
+		LoadAlert.Instance.StartLoad("Creating " + name + "...",null,-1);
+		
+		ParseACL acl = new ParseACL(ParseUser.CurrentUser);
+		
+		ParseRole role = new ParseRole(name,acl);
+		role.Users.Add(ParseUser.CurrentUser);
+		
+		User.CurrentUser.CompanyName = name;
+		
+		Task task = role.SaveAsync();
+		
+		while(!task.IsCompleted)
+			yield return null;
+		
+		if(task.IsFaulted || task.Exception != null)
+		{
+			Debug.Log("error:\n" + task.Exception.ToString());
+		}
+		else
+		{
+			task = ParseUser.CurrentUser.SaveAsync();
+			
+			while(!task.IsCompleted)
+				yield return null;
+			
+			if(task.IsFaulted || task.Exception != null)
+			{
+				Debug.Log("error:\n" + task.Exception.ToString());
+			}
+			else
+			{
+				TeamUpdated(role);
+			}
+		}
 	}
 	#endregion
 

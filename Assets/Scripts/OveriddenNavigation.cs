@@ -28,8 +28,6 @@ public class OveriddenNavigation : AppNavigationController
 		}
 		else
 		{
-			//initialize the user here if Parse is already logged in
-			User.Init();
 			LoggedIn();
 		}
 	}
@@ -42,6 +40,7 @@ public class OveriddenNavigation : AppNavigationController
 
 		PresentUIView(_homeView);
 
+		User.CurrentUser.GetData();
 		//_viewStack.Push(_homeView);
 	}
 	#endregion
