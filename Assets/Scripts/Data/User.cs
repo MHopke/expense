@@ -45,16 +45,15 @@ public class User : MonoBehaviour
 	{
 		CurrentTeam = role;
 	}
+	public bool NeedsSetup()
+	{
+		return (!ParseUser.CurrentUser.ContainsKey(NAME)) || (string.IsNullOrEmpty(Name));
+	}
 	#endregion
 
 	#region Coroutines
 	IEnumerator GetRole()
 	{
-		if(string.IsNullOrEmpty(Name))
-		{
-			//enter information here
-		}
-
 		LoadAlert.Instance.StartLoad("Checking for existing team...",null,-1);
 		ParseQuery<ParseRole> query = new ParseQuery<ParseRole>();
 		
@@ -83,6 +82,9 @@ public class User : MonoBehaviour
 		else
 		{
 			TeamUpdated(task.Result);
+
+			if(NeedsSetup())
+				NewUserAlert.Instance.Open();
 		}
 	}
 	IEnumerator CreateTeamCoroutine(string name)

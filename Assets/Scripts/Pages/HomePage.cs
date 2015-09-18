@@ -124,6 +124,8 @@ public class HomePage : UIView
 		else
 		{
 			User.CurrentUser.CurrentTeam.Users.Add(task.Result);
+			User.CurrentUser.CurrentTeam.ACL.SetReadAccess(task.Result,true);
+			User.CurrentUser.CurrentTeam.ACL.SetWriteAccess(task.Result,true);
 
 			Task save = User.CurrentUser.CurrentTeam.SaveAsync();
 
