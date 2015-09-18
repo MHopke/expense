@@ -85,7 +85,6 @@ public class Database : MonoBehaviour
 		else
 		{
 			_clients = task.Result.ToList();
-			Debug.Log("client count: " + _clients.Count);
 		}
 
 		StartCoroutine(GetProjects());

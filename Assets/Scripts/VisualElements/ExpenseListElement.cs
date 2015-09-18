@@ -7,9 +7,8 @@ using gametheory.UI;
 
 public class ExpenseListElement : VisualElement 
 {
-
 	#region Constants
-	const string VALUE_PREFIX = "Value: ";
+	const string VALUE_PREFIX = "$";
 	const string USER_PREFIX = "Submitted by: ";
 	#endregion
 	
@@ -87,7 +86,7 @@ public class ExpenseListElement : VisualElement
 		Description.text = item.Description;
 
 		Date.text = item.Date.ToShortDateString();
-		Value.text = item.Value.ToString();
+		Value.text = VALUE_PREFIX + item.Value.ToString();
 
 		UserText.text = USER_PREFIX + item.User[User.NAME];
 
