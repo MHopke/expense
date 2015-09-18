@@ -40,16 +40,6 @@ public class HomePage : UIView
 		Database.initialized -= DatabaseInitialized;
 		ClientAlert.createdClient -= AddClient;
 	}
-	protected override void OnActivate ()
-	{
-		base.OnActivate ();
-
-		if(!_pulledData)
-		{
-			Database.Instance.Init();
-			_pulledData = true;
-		}
-	}
 	#endregion
 
 	#region UI Methods
@@ -59,7 +49,7 @@ public class HomePage : UIView
 	}
 	public void Logout()
 	{
-		ParseUser.LogOutAsync();
+		StartCoroutine(LogoutCoroutine());
 	}
 	public void InviteTeammate()
 	{
@@ -86,7 +76,6 @@ public class HomePage : UIView
 	#region Coroutines
 	IEnumerator CreateTeammate(string email)
 	{
-		LoadAlert.Instance.StartLoad("Inviting Teammate...",null,-1);
 		string pass = GenerateTempPassword();
 
 		IDictionary<string,object> userDict = new Dictionary<string, object>();
@@ -140,14 +129,57 @@ public class HomePage : UIView
 				StartCoroutine(SendEmail(email,pass));
 		}
 	}
+	IEnumerator GetUser(string email)
+	{
+		ParseQuery<ParseUser> query = new ParseQuery<ParseUser>().WhereEqualTo("username",email);
+		
+		Task<ParseUser> task = query.FirstAsync();
+		
+		while(!task.IsCompleted)
+			yield return null;
+		
+		if(task.IsFaulted)
+		{
+			Debug.Log("couldn't find user:\n" + task.Exception.ToString());
+			StartCoroutine(CreateTeammate(email));
+		}
+		else
+		{
+			User.CurrentUser.CurrentTeam.Users.Add(task.Result);
+			User.CurrentUser.CurrentTeam.ACL.SetReadAccess(task.Result,true);
+			User.CurrentUser.CurrentTeam.ACL.SetWriteAccess(task.Result,true);
+			
+			Task save = User.CurrentUser.CurrentTeam.SaveAsync();
+			
+			while(!save.IsCompleted)
+				yield return null;
+			
+			if(task.IsFaulted)
+			{
+				Debug.Log("failed to update role:\n" + task.Exception.ToString());
+			}
+			else
+				StartCoroutine(SendEmail(email,""));
+		}
+	}
 	IEnumerator SendEmail(string email,string pass)
 	{
 		IDictionary<string,object> dict = new Dictionary<string, object>();
 		dict.Add("toEmail",email);
 		dict.Add("fromEmail",FROM_EMAIL);
-		dict.Add("text","You've been invited to join " + User.CurrentUser.CompanyName + ".\n" +
-		         "Please download the Expense.It app, and use the following temporary credentials:\n" +
-		         "Account: " + email + "\nPassword: " + pass);
+
+		string body = "You've been invited to join " + User.CurrentUser.CompanyName + ".\n" +
+			"Please download the Expense.It app, ";
+
+		if(!string.IsNullOrEmpty(pass))
+		{
+			body += "and use the following temporary credentials:\n" +
+					"Account: " + email + "\nPassword: " + pass;
+		}
+		else
+			body += "and login to your user account.";
+
+		dict.Add("text",body);
 		dict.Add("subject","Expense.It - You've been invited to join " + User.CurrentUser.CompanyName);
 		
 		Task cloudTask = ParseCloud.CallFunctionAsync<IDictionary<string,object>>("sendMail",dict);
@@ -163,7 +195,27 @@ public class HomePage : UIView
 		}
 		else
 		{
-			Debug.Log("email send!");
+			Debug.Log("email sent!");
+		}
+	}
+	IEnumerator LogoutCoroutine()
+	{
+		LoadAlert.Instance.StartLoad("Logging out...",null,-1);
+		Task task = ParseUser.LogOutAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(task.IsFaulted)
+		{
+			Debug.Log("failed to logout:\n" + task.Exception.ToString());
+		}
+		else
+		{
+			ClientList.ClearElements();
+			(OveriddenNavigation.Instance as OveriddenNavigation).PopToLogin();
 		}
 	}
 	#endregion
@@ -187,7 +239,9 @@ public class HomePage : UIView
 	}
 	void EmailEntered(string email)
 	{
-		StartCoroutine(CreateTeammate(email.ToLower()));
+		LoadAlert.Instance.StartLoad("Inviting Teammate...",null,-1);
+		StartCoroutine(GetUser(email));
+		//StartCoroutine(CreateTeammate(email.ToLower()));
 	}
 	#endregion
 }

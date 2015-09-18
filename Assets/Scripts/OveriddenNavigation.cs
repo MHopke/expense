@@ -23,13 +23,30 @@ public class OveriddenNavigation : AppNavigationController
 
 		if(ParseUser.CurrentUser == null)
 		{
-			Login.deactivatedEvent += LoggedIn;
-			PresentUIView(Login);
+			PresentLogin();
 		}
 		else
 		{
 			LoggedIn();
 		}
+	}
+	#endregion
+
+	#region Methods
+	public void PopToLogin()
+	{
+		if(_viewStack.Count >= 1)
+			BackButton.Remove();
+		_viewStack.Clear();
+
+		RemoveUIView(CurrentView);
+
+		PresentLogin();
+	}
+	void PresentLogin()
+	{
+		Login.deactivatedEvent += LoggedIn;
+		PresentUIView(Login);
 	}
 	#endregion
 

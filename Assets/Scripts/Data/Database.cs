@@ -27,11 +27,17 @@ public class Database : MonoBehaviour
 	{
 		if(Instance == null)
 		{
+			User.dataRefreshed += Init;
+
 			Instance = this;
 			DontDestroyOnLoad(gameObject);
 		}
 		else
 			DestroyObject(gameObject);
+	}
+	void OnDestroy()
+	{
+		User.dataRefreshed -= Init;
 	}
 	#endregion
 
@@ -79,6 +85,7 @@ public class Database : MonoBehaviour
 		else
 		{
 			_clients = task.Result.ToList();
+			Debug.Log("client count: " + _clients.Count);
 		}
 
 		StartCoroutine(GetProjects());

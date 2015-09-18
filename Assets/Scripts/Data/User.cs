@@ -9,6 +9,10 @@ using Parse;
 
 public class User : MonoBehaviour
 {
+	#region Events
+	public static event System.Action dataRefreshed;
+	#endregion
+
 	#region Constants
 	public const string COMPANY_NAME = "roleName";
 	public const string NAME = "name";
@@ -44,6 +48,15 @@ public class User : MonoBehaviour
 	void TeamUpdated(ParseRole role)
 	{
 		CurrentTeam = role;
+
+		if(HasNoTeam())
+			StartCoroutine(AssignTeamName());
+		else if(dataRefreshed != null)
+			dataRefreshed();
+	}
+	public bool HasNoTeam()
+	{
+		return (!ParseUser.CurrentUser.ContainsKey(COMPANY_NAME)) || (string.IsNullOrEmpty(CompanyName));
 	}
 	public bool NeedsSetup()
 	{
@@ -123,6 +136,17 @@ public class User : MonoBehaviour
 				TeamUpdated(role);
 			}
 		}
+	}
+	IEnumerator AssignTeamName()
+	{
+		CompanyName = CurrentTeam.Name;
+		Task task = ParseUser.CurrentUser.SaveAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		if(dataRefreshed != null)
+			dataRefreshed();
 	}
 	#endregion
 
