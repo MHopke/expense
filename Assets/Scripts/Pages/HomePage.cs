@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 using System.Collections;
 using System.Collections.Generic;
@@ -12,11 +13,15 @@ public class HomePage : UIView
 {
 	#region Constants
 	const string FROM_EMAIL = "gametheoryco@gmail.com";
+	const string MENU_IN = "MenuIn";
+	const string MENU_OUT = "MenuOut";
 
 	const int PASSWORD_LENGTH = 8;
 	#endregion
 
 	#region Public Vars
+	public Text CompanyName;
+
 	public UIList ClientList;
 	public ClientPage ClientPage;
 
@@ -24,7 +29,7 @@ public class HomePage : UIView
 	#endregion
 
 	#region Private Vars
-	bool _pulledData;
+	bool _pulledData, _menuIn;
 	#endregion
 
 	#region Overidden Methods
@@ -55,6 +60,15 @@ public class HomePage : UIView
 	{
 		SingleInputAlert.Instance.Present("Invite Teammate","Enter the " +
 			"email of the person you'd like to invite.","",EmailEntered,null,true);
+	}
+	public void Menu()
+	{
+		if(_menuIn)
+			Animator.SetTrigger(MENU_OUT);
+		else
+			Animator.SetTrigger(MENU_IN);
+
+		_menuIn = !_menuIn;
 	}
 	#endregion
 
@@ -223,6 +237,8 @@ public class HomePage : UIView
 	#region Event Listeners
 	void DatabaseInitialized()
 	{
+		CompanyName.text = User.CurrentUser.CompanyName;
+
 		for(int index = 0; index < Database.Instance.Clients.Count; index++)//foreach(Client client in task.Result)
 		{
 			AddClient(Database.Instance.Clients[index]);

@@ -12,11 +12,20 @@ using Prime31;
 public class ImageUploadAlert : UIView 
 {
 	#region Events
-	public static event System.Action<byte[]> uploadFile;
+	public static event Action<byte[]> uploadFile;
+	#endregion
+
+	#region Constants
+	const string UPLOAD_IMAGE = "Upload Image";
+	const string CONFIRM = "Confirm";
+	const string SORRY = "Sorry";
+
+	const float RADIUS_PERCENT = 0.48f;
 	#endregion
 
 	#region Public Vars
-	public InputField FileName;
+	public Text ConfirmText;
+	public Text Title;
 	public RawImage Temp;
 
 	public static ImageUploadAlert Instance = null;
@@ -33,6 +42,8 @@ public class ImageUploadAlert : UIView
 		Instance = this;
 #if UNITY_IPHONE
 		EtceteraManager.imagePickerChoseImageEvent += Open;
+        #elif UNITY_ANDROID
+        EtceteraAndroidManager.albumChooserSucceededEvent += Open;
 #endif
 	}
 	protected override void OnCleanUp ()
@@ -40,6 +51,8 @@ public class ImageUploadAlert : UIView
 		Instance = null;
 #if UNITY_IPHONE
 			EtceteraManager.imagePickerChoseImageEvent -= Open;
+        #elif UNITY_ANDROID
+        EtceteraAndroidManager.albumChooserSucceededEvent -= Open;
 #endif
 		base.OnCleanUp ();
 	}
@@ -49,10 +62,10 @@ public class ImageUploadAlert : UIView
 	public void Confirm()
 	{
 		Deactivate();
-
+		
 		if(uploadFile != null)
 			uploadFile(_data);
-
+		
 		_data = null;
 	}
 	#endregion
@@ -61,27 +74,97 @@ public class ImageUploadAlert : UIView
 	public void Open(string filePath)
 	{
 		UIAlertController.Instance.PresentAlert(this);
+        Texture2D tex = LoadImage(filePath);
 
-		string[] arr = filePath.Split(System.IO.Path.DirectorySeparatorChar);
+        if(tex != null)
+        {
+			//treat the image as a square
+			int dim = 0;
+			float halfDim =0f;
 
-		if(arr.Length > 0)
-			FileName.text = arr[arr.Length - 1];
+			if(tex.width < tex.height)
+				dim = tex.width;
+			else
+				dim = tex.height;
 
-		try
+			halfDim = (float)dim / 2f;
+
+			tex = CalculateTexture(dim,dim,(float)dim * RADIUS_PERCENT,halfDim,halfDim,tex);
+
+			//convert new texture back to data
+			_data = tex.EncodeToPNG();
+			/*if(filePath.EndsWith(".png"))
+				_data = tex.EncodeToPNG();
+			else
+				_data = tex.EncodeToJPG();*/
+
+			Temp.texture = tex;
+        }
+	}
+#if UNITY_ANDROID
+    public Texture2D LoadImage( string imagePath )
+    {
+        // scale the image down to a reasonable size before loading
+        EtceteraAndroid.scaleImageAtPath( imagePath, 0.1f );
+        return EtceteraAndroid.textureFromFileAtPath( imagePath );
+    }
+#else
+    public Texture2D LoadImage(string filePath)
+    {
+        string[] arr = filePath.Split(System.IO.Path.DirectorySeparatorChar);
+        
+        try
+        {
+            if(File.Exists(filePath))
+            {
+                _data = File.ReadAllBytes(filePath);
+                
+                Texture2D tex = new Texture2D(2,2);
+                tex.LoadImage(_data);
+                
+                return tex;
+            }
+            else
+                Debug.LogError(filePath + " doesn't exist");
+        }
+        catch(Exception e)
+        {
+            Debug.LogException(e);
+        }
+        
+        return null;
+    }
+#endif
+	Texture2D CalculateTexture(
+		int h, int w,float r,float cx,float cy,Texture2D sourceTex
+		)
+	{
+		Color [] c= sourceTex.GetPixels(0, 0, sourceTex.width, sourceTex.height);
+
+		Texture2D b=new Texture2D(h,w);
+
+		for (int i = 0 ; i<(h*w);i++)
 		{
-			if(File.Exists(filePath))
-			{
-				_data = File.ReadAllBytes(filePath);
-				
-				Texture2D tex = new Texture2D(2,2);
-				tex.LoadImage(_data);
+			int y=Mathf.FloorToInt(((float)i)/((float)w));
+			int x=Mathf.FloorToInt(((float)i-((float)(y*w))));
 
-				Temp.texture = tex;
-			}
+			if (r*r>=(x-cx)*(x-cx)+(y-cy)*(y-cy))
+				b.SetPixel(x, y, c[i]);
+			else
+				b.SetPixel(x, y, Color.clear);
 		}
-		catch(Exception e)
-		{
-		}
+
+		b.Apply ();
+
+		return b;
+	}
+	#endregion
+
+	#region Event Listeners
+	void LanguageChanged()
+	{
+		Title.text = UPLOAD_IMAGE;
+		ConfirmText.text= CONFIRM;
 	}
 	#endregion
 }

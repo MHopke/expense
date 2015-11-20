@@ -92,11 +92,13 @@ public class ExpenseAlert : UIView
 	}
 	public void UploadImage()
 	{
-#if UNITY_IPHONE && !UNITY_EDITOR
-		EtceteraBinding.promptForPhoto(0.8f);
-#else
+		#if UNITY_EDITOR
 		UniFileBrowser.use.OpenFileWindow(ImageUploadAlert.Instance.Open);
-#endif
+		#elif UNITY_IPHONE
+		EtceteraBinding.promptForPhoto(0.2f);
+		#elif UNITY_ANDROID
+		EtceteraAndroid.promptForPictureFromAlbum("");
+		#endif
 	}
 	#endregion
 

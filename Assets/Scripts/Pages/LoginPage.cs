@@ -38,7 +38,7 @@ public class LoginPage : UIView
 	{
 		Title.text = LOGIN;
 		CreateToggle.Button.image.color = OFF;
-		LoginToggle.Button.image.color = Color.white;
+		LoginToggle.Button.image.color = Colors.Blue;
 		LoginToggle.Disable();
 		CreateToggle.Enable();
 		NameField.transform.parent.gameObject.SetActive(false);
@@ -47,7 +47,7 @@ public class LoginPage : UIView
 	public void ToggleCreate()
 	{
 		Title.text = CREATE;
-		CreateToggle.Button.image.color = Color.white;
+		CreateToggle.Button.image.color = Colors.Blue;
 		CreateToggle.Disable();
 		LoginToggle.Enable();
 		LoginToggle.Button.image.color = OFF;
