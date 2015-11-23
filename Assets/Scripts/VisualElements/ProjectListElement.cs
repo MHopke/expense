@@ -2,22 +2,31 @@
 using UnityEngine.UI;
 
 using System.Collections;
+using System.Threading.Tasks;
 
 using gametheory.UI;
+
+using Parse;
 
 public class ProjectListElement : VisualElement 
 {
 	#region Constants
 	const string COUNT_SUFFIX = " Expenses";
+	const string EDIT_WARNING_HEADER = "Warning";
+	const string EDIT_WARNING_BODY = "This project is closed and " +
+		"you cannot edit it. Please contact the Project Leader.";
 	#endregion
 	
 	#region Public Vars
-	public Text Name;
-	public Text Description;
+	//public Text Name;
+	//public Text Description;
 	public Text ItemCount;
 	public Text ViewText;
 	public Text NewText;
 	public Text ReportText;
+
+	public InputField Namefield;
+	public InputField Descriptionfield;
 
 	public Image Background;
 	
@@ -27,6 +36,7 @@ public class ProjectListElement : VisualElement
 	#endregion
 	
 	#region Private Vars
+	string _previousName, _previousDescription;
 	Project _project;
 	#endregion
 	
@@ -45,11 +55,17 @@ public class ProjectListElement : VisualElement
 	{
 		base.PresentVisuals (display);
 
-		if(Name)
-			Name.enabled = display;
+		if(Namefield)
+		{
+			Namefield.enabled = display;
+			//Namefield.placeholder.enabled = display;
+		}
 
-		if(Description)
-			Description.enabled = display;
+		if(Descriptionfield)
+		{
+			Descriptionfield.enabled = display;
+			//Descriptionfield.placeholder.enabled = display;
+		}
 		
 		if(ItemCount)
 			ItemCount.enabled = display;
@@ -102,6 +118,15 @@ public class ProjectListElement : VisualElement
 
 		if(NewButton)
 			NewButton.interactable = false;
+
+		if(!_project.Closed)
+		{
+			if(Namefield)
+				Namefield.interactable = false;
+
+			if(Descriptionfield)
+				Descriptionfield.interactable = false;
+		}
 	}
 	protected override void Enabled ()
 	{
@@ -115,6 +140,15 @@ public class ProjectListElement : VisualElement
 
 		if(NewButton)
 			NewButton.interactable = true;
+
+		if(!_project.Closed)
+		{
+			if(Namefield)
+				Namefield.interactable = true;
+			
+			if(Descriptionfield)
+				Descriptionfield.interactable = true;
+		}
 	}
 	#endregion
 	
@@ -135,6 +169,30 @@ public class ProjectListElement : VisualElement
 	{
 		ExpenseAlert.Instance.Open(_project);
 	}
+	public void NameEdited(string name)
+	{
+		/*if(_project.Closed)
+		{
+			DefaultAlert.Present(EDIT_WARNING_HEADER,EDIT_WARNING_BODY);
+			return;
+		}*/
+		_previousName = _project.Name;
+		_project.Name = name;
+
+		StartCoroutine(SaveChanges());
+	}
+	public void DescriptionEdited(string description)
+	{
+		/*if(_project.Closed)
+		{
+			DefaultAlert.Present(EDIT_WARNING_HEADER,EDIT_WARNING_BODY);
+			return;
+		}*/
+		_previousDescription = _project.Description;
+		_project.Description = description;
+
+		StartCoroutine(SaveChanges());
+	}
 	#endregion
 	
 	#region Methods
@@ -142,9 +200,15 @@ public class ProjectListElement : VisualElement
 	{
 		_project = project;
 		
-		Name.text = project.Name;
-		Description.text = project.Description;
-		
+		Namefield.text = project.Name;
+		Descriptionfield.text = project.Description;
+
+		if(_project.Closed)
+		{
+			Namefield.interactable = false;
+			Descriptionfield.interactable = false;
+		}
+
 		SetProjectCount();
 	}
 	void SetProjectCount()
@@ -152,7 +216,33 @@ public class ProjectListElement : VisualElement
 		ItemCount.text = _project.ItemCount + COUNT_SUFFIX;
 	}
 	#endregion
-	
+
+	#region Coroutines
+	IEnumerator SaveChanges()
+	{
+		LoadAlert.Instance.StartLoad("Saving Changes...",null,-1);
+		Task save = _project.SaveAsync();
+
+		while(!save.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(save.IsFaulted || save.Exception != null)
+		{
+			DefaultAlert.Present("Sorry","There was an error when updating the project. Please try again later");
+
+			_project.Name = _previousName;
+			_project.Description = _previousDescription;
+		}
+		else
+		{
+			_previousName = _project.Name;
+			_previousDescription = _project.Description;
+		}
+	}
+	#endregion
+
 	#region Event Listeners
 	void ExpenseCreated(Expense item)
 	{

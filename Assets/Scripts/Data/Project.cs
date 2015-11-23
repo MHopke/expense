@@ -11,6 +11,8 @@ public class Project : ParseObject
 	const string DESCRIPTION = "Description";
 	const string ITEM_COUNT = "ItemCount";
 	const string CLIENT = "Client";
+	const string PROJECT_LEADER = "ProjectLeader";
+	const string CLOSED = "Closed";
 	#endregion
 
 	#region Constructors
@@ -18,6 +20,13 @@ public class Project : ParseObject
 	#endregion
 
 	#region Properties
+	[ParseFieldName("closed")]
+	public bool Closed
+	{
+		get { return GetProperty<bool>(CLOSED); }
+		set { SetProperty<bool>(value,CLOSED); }
+	}
+
 	[ParseFieldName("name")]
 	public string Name
 	{
@@ -44,6 +53,13 @@ public class Project : ParseObject
 	{
 		get { return GetProperty<Client>(CLIENT); }
 		set { SetProperty<Client>(value,CLIENT); }
+	}
+
+	[ParseFieldName("projectLeader")]
+	public ParseUser ProjectLeader
+	{
+		get { return GetProperty<ParseUser>(PROJECT_LEADER); }
+		set { SetProperty<ParseUser>(value,PROJECT_LEADER); }
 	}
 	#endregion
 }
