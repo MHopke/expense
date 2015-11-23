@@ -259,5 +259,6 @@ public class HomePage : UIView
 		StartCoroutine(GetUser(email));
 		//StartCoroutine(CreateTeammate(email.ToLower()));
 	}
+	//void ClientsUpdate(Clien
 	#endregion
 }

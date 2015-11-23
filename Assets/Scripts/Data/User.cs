@@ -20,6 +20,7 @@ public class User : MonoBehaviour
 
 	#region Public Vars
 	public ParseRole CurrentTeam;
+
 	public static User CurrentUser;
 	#endregion
 

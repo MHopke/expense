@@ -1,9 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+using System.Collections;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using gametheory.UI;
+
+using Parse;
 
 public class ClientPage : UIView 
 {
@@ -35,11 +39,13 @@ public class ClientPage : UIView
 	protected override void OnActivate ()
 	{
 		ProjectAlert.projectCreated += AddProject;
+		ProjectListElement.switchedClient += ProjectSwitchedClients;
 		base.OnActivate();
 	}
 	protected override void OnDeactivate ()
 	{
 		ProjectAlert.projectCreated -= AddProject;
+		ProjectListElement.switchedClient -= ProjectSwitchedClients;
 		base.OnDeactivate ();
 	}
 	#endregion
@@ -74,6 +80,38 @@ public class ClientPage : UIView
 		element.Setup(project);
 
 		ProjectList.AddListElement(element);
+	}
+	#endregion
+
+	#region Coroutines
+	IEnumerator UpdateClients(ProjectListElement element, Client previous)
+	{
+		LoadAlert.Instance.StartLoad("Updating Clients...",null,-1);
+		
+		List<Client> updates = new List<Client>();
+		
+		previous.ProjectCount--;
+		element.Project.Client.ProjectCount++;
+		
+		updates.Add(previous);
+		updates.Add(element.Project.Client);
+		
+		Task updateClient = updates.SaveAllAsync();
+		
+		while(!updateClient.IsCompleted)
+			yield return null;
+		
+		LoadAlert.Instance.Done();
+		
+		if(updateClient.Exception == null)
+			ProjectList.RemoveListElement(element);
+	}
+	#endregion
+
+	#region Event Listeners
+	void ProjectSwitchedClients(ProjectListElement element, Client previous)
+	{
+		StartCoroutine(UpdateClients(element,previous));
 	}
 	#endregion
 }

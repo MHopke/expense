@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 using gametheory.UI;
 
+using Parse;
+
 public class ProjectAlert : UIView 
 {
 	#region Events
@@ -59,9 +61,10 @@ public class ProjectAlert : UIView
 	public void Open(Client client)
 	{
 		_project = new Project() { ItemCount = 0, Client = client };
-		_project.ACL = new Parse.ParseACL();
+		_project.ACL = new ParseACL();
 		_project.ACL.SetRoleReadAccess(User.CurrentUser.CompanyName,true);
 		_project.ACL.SetRoleWriteAccess(User.CurrentUser.CompanyName,true);
+		_project.ProjectLeader = ParseUser.CurrentUser;
 
 		int selection = -1;
 		List<string> names = new List<string>();

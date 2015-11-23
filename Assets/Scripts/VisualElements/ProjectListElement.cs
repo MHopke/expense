@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using gametheory.UI;
@@ -10,6 +11,10 @@ using Parse;
 
 public class ProjectListElement : VisualElement 
 {
+	#region Events
+	public static event System.Action<ProjectListElement,Client> switchedClient;
+	#endregion
+
 	#region Constants
 	const string COUNT_SUFFIX = " Expenses";
 	const string EDIT_WARNING_HEADER = "Warning";
@@ -33,10 +38,19 @@ public class ProjectListElement : VisualElement
 	public Button ViewButton;
 	public Button ReportButton;
 	public Button NewButton;
+
+	public Dropdown ClientDropdown;
+
+	public Toggle ClosedToggle;
 	#endregion
 	
 	#region Private Vars
+	bool _previousClosed;
+
 	string _previousName, _previousDescription;
+
+	Client _previousClient;
+
 	Project _project;
 	#endregion
 	
@@ -105,27 +119,39 @@ public class ProjectListElement : VisualElement
 			if(NewButton.image)
 				NewButton.image.enabled = display;
 		}
+
+		if(ClientDropdown)
+			ClientDropdown.enabled = display;
+
+		if(ClosedToggle)
+			ClosedToggle.enabled = display;
 	}
 	protected override void Disabled ()
 	{
 		base.Disabled ();
-		
+
 		if(ViewButton)
 			ViewButton.interactable = false;
-		
-		if(ReportButton)
-			ReportButton.interactable = false;
 
-		if(NewButton)
-			NewButton.interactable = false;
+		if(ClosedToggle)
+			ClosedToggle.interactable = false;
 
 		if(!_project.Closed)
 		{
+			if(ReportButton)
+				ReportButton.interactable = false;
+			
+			if(NewButton)
+				NewButton.interactable = false;
+
 			if(Namefield)
 				Namefield.interactable = false;
 
 			if(Descriptionfield)
 				Descriptionfield.interactable = false;
+
+			if(ClientDropdown)
+				ClientDropdown.interactable = false;
 		}
 	}
 	protected override void Enabled ()
@@ -135,19 +161,25 @@ public class ProjectListElement : VisualElement
 		if(ViewButton)
 			ViewButton.interactable = true;
 		
-		if(ReportButton)
-			ReportButton.interactable = true;
-
-		if(NewButton)
-			NewButton.interactable = true;
+		if(ClosedToggle)
+			ClosedToggle.interactable = true;
 
 		if(!_project.Closed)
 		{
+			if(ReportButton)
+			ReportButton.interactable = true;
+			
+			if(NewButton)
+				NewButton.interactable = true;
+
 			if(Namefield)
 				Namefield.interactable = true;
 			
 			if(Descriptionfield)
 				Descriptionfield.interactable = true;
+
+			if(ClientDropdown)
+				ClientDropdown.interactable = true;
 		}
 	}
 	#endregion
@@ -176,10 +208,13 @@ public class ProjectListElement : VisualElement
 			DefaultAlert.Present(EDIT_WARNING_HEADER,EDIT_WARNING_BODY);
 			return;
 		}*/
-		_previousName = _project.Name;
-		_project.Name = name;
+		if(_previousName != name)
+		{
+			_previousName = _project.Name;
+			_project.Name = name;
 
-		StartCoroutine(SaveChanges());
+			StartCoroutine(SaveChanges());
+		}
 	}
 	public void DescriptionEdited(string description)
 	{
@@ -188,10 +223,33 @@ public class ProjectListElement : VisualElement
 			DefaultAlert.Present(EDIT_WARNING_HEADER,EDIT_WARNING_BODY);
 			return;
 		}*/
-		_previousDescription = _project.Description;
-		_project.Description = description;
+		if(_previousDescription != description)
+		{
+			_previousDescription = _project.Description;
+			_project.Description = description;
 
-		StartCoroutine(SaveChanges());
+			StartCoroutine(SaveChanges());
+		}
+	}
+	public void ClientChanged(int choice)
+	{
+		Client client = Database.Instance.Clients[choice];
+
+		if(client.ObjectId != _previousClient.ObjectId)
+		{
+			_previousClient = _project.Client;
+			_project.Client = client;
+			StartCoroutine(SaveChanges());
+		}
+	}
+	public void ClosedToggled(bool closed)
+	{
+		if(_previousClosed != closed)
+		{
+			_previousClosed = _project.Closed;
+			_project.Closed = closed;
+			StartCoroutine(SaveChanges());
+		}
 	}
 	#endregion
 	
@@ -199,14 +257,37 @@ public class ProjectListElement : VisualElement
 	public void Setup(Project project)
 	{
 		_project = project;
-		
+
+		_previousName = _project.Name;
+		_previousDescription = _project.Description;
+		_previousClient = _project.Client;
+
 		Namefield.text = project.Name;
 		Descriptionfield.text = project.Description;
+
+		List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
+		for(int index = 0; index < Database.Instance.Clients.Count; index++)
+		{
+			options.Add(new Dropdown.OptionData(Database.Instance.Clients[index].Name));
+		}
+		ClientDropdown.options = options;
+		ClientDropdown.value = Database.Instance.GetClientIndex(_project.Client);
+
+		if(_project.IsProjectLeader(ParseUser.CurrentUser))
+		{
+			_previousClosed = project.Closed;
+			ClosedToggle.isOn = project.Closed;
+		}
+		else
+			ClosedToggle.gameObject.SetActive(false);
 
 		if(_project.Closed)
 		{
 			Namefield.interactable = false;
 			Descriptionfield.interactable = false;
+			ClientDropdown.interactable = false;
+			ReportButton.interactable = false;
+			NewButton.interactable = false;
 		}
 
 		SetProjectCount();
@@ -234,11 +315,19 @@ public class ProjectListElement : VisualElement
 
 			_project.Name = _previousName;
 			_project.Description = _previousDescription;
+			_project.Client = _previousClient;
+			_project.Closed = _previousClosed;
 		}
 		else
 		{
 			_previousName = _project.Name;
 			_previousDescription = _project.Description;
+			_previousClosed = _project.Closed;
+
+			if(_project.Client != _previousClient && switchedClient != null)
+			{
+				switchedClient(this,_previousClient);
+			}
 		}
 	}
 	#endregion
@@ -251,4 +340,10 @@ public class ProjectListElement : VisualElement
 	}
 	#endregion
 
+	#region Properties
+	public Project Project
+	{
+		get { return _project; }
+	}
+	#endregion
 }

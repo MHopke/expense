@@ -93,6 +93,9 @@ public class ClientListElement : VisualElement
 		if(NewButton)
 			NewButton.interactable = true;
 	}
+	public override void SetBinding (string propertyName)
+	{
+	}
 	#endregion
 
 	#region UI Methods

@@ -19,6 +19,13 @@ public class Project : ParseObject
 	public Project(){}
 	#endregion
 
+	#region Methods
+	public bool IsProjectLeader(ParseUser User)
+	{
+		return ProjectLeader.ObjectId == User.ObjectId;
+	}
+	#endregion
+
 	#region Properties
 	[ParseFieldName("closed")]
 	public bool Closed
@@ -55,7 +62,7 @@ public class Project : ParseObject
 		set { SetProperty<Client>(value,CLIENT); }
 	}
 
-	[ParseFieldName("projectLeader")]
+	[ParseFieldName("projectLead")]
 	public ParseUser ProjectLeader
 	{
 		get { return GetProperty<ParseUser>(PROJECT_LEADER); }

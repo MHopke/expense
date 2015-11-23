@@ -64,6 +64,16 @@ public class Database : MonoBehaviour
 	{
 		_clients.Add(client);
 	}
+	public int GetClientIndex(Client client)
+	{
+		for(int index =0; index < _clients.Count; index++)
+		{
+			if(_clients[index].ObjectId == client.ObjectId)
+				return index;
+		}
+
+		return -1;
+	}
 	#endregion
 
 	#region Coroutines
@@ -109,6 +119,23 @@ public class Database : MonoBehaviour
 		else
 		{
 			_projects = task.Result.ToList();
+
+			int sub = 0;
+			Client client = null;
+			Project project = null;
+			for(int index = 0; index < _projects.Count; index++)
+			{
+				project = _projects[index];
+				for(sub = 0; sub < _clients.Count; sub++)
+				{
+					client = _clients[sub];
+					if(project.Client.ObjectId == client.ObjectId)
+					{
+						project.Client = client;
+						break;
+					}
+				}
+			}
 		}
 
 		if(initialized != null)
