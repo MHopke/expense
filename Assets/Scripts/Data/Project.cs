@@ -3,9 +3,15 @@ using System.Collections;
 
 using Parse;
 
+using gametheory.UI;
+
 [ParseClassName("Project")]
-public class Project : ParseObject 
+public class Project : ParseObject, IBindingContext
 {
+	#region Events
+	public event System.Action<object,string> propertyChanged;
+	#endregion
+
 	#region Constants
 	const string NAME = "Name";
 	const string DESCRIPTION = "Description";

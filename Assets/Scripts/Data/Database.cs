@@ -54,7 +54,10 @@ public class Database : MonoBehaviour
 	{
 		_projects.Add(project);
 	}
-
+	public void RemoveProject(Project project)
+	{
+		_projects.Remove(project);
+	}
 	public List<Project> GetProjects(Client client)
 	{
 		return new List<Project>(from p in _projects where p.Client.ObjectId == client.ObjectId select p);
@@ -63,6 +66,10 @@ public class Database : MonoBehaviour
 	public void AddClient(Client client)
 	{
 		_clients.Add(client);
+	}
+	public void RemoveClient(Client client)
+	{
+		_clients.Remove(client);
 	}
 	public int GetClientIndex(Client client)
 	{

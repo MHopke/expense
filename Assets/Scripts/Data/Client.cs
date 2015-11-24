@@ -1,15 +1,16 @@
 ﻿using UnityEngine;
 
-using System.ComponentModel;
 using System.Collections;
 
 using Parse;
 
+using gametheory.UI;
+
 [ParseClassName("Client")]
-public class Client : ParseObject 
+public class Client : ParseObject, IBindingContext 
 {
 	#region Events
-	public event PropertyChangedEventHandler propertyChanged;
+	public event System.Action<object,string> propertyChanged;
 	#endregion
 
 	#region Constants
@@ -40,7 +41,7 @@ public class Client : ParseObject
 				SetProperty<int>(value,PROJECT_COUNT); 
 
 				if(propertyChanged != null)
-					propertyChanged(this, new PropertyChangedEventArgs("ProjectCount"));
+					propertyChanged(this, "ProjectCount");
 			}
 		}
 	}

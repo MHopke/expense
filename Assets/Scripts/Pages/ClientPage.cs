@@ -40,12 +40,14 @@ public class ClientPage : UIView
 	{
 		ProjectAlert.projectCreated += AddProject;
 		ProjectListElement.switchedClient += ProjectSwitchedClients;
+		ProjectListElement.deleteProject += DeleteProject;
 		base.OnActivate();
 	}
 	protected override void OnDeactivate ()
 	{
 		ProjectAlert.projectCreated -= AddProject;
 		ProjectListElement.switchedClient -= ProjectSwitchedClients;
+		ProjectListElement.deleteProject -= DeleteProject;
 		base.OnDeactivate ();
 	}
 	#endregion
@@ -106,12 +108,48 @@ public class ClientPage : UIView
 		if(updateClient.Exception == null)
 			ProjectList.RemoveListElement(element);
 	}
+	IEnumerator DeleteCoroutine(ProjectListElement element)
+	{
+		LoadAlert.Instance.StartLoad("Removing Project...",null,-1);
+
+		Client client = element.Project.Client;
+
+		Database.Instance.RemoveProject(element.Project);
+
+		Task task = element.Project.DeleteAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		if(task.Exception != null)
+		{
+			LoadAlert.Instance.Done();
+			//display alert here?
+		}
+		else
+		{
+			ProjectList.RemoveListElement(element);
+
+			client.ProjectCount--;
+
+			task = client.SaveAsync();
+
+			while(!task.IsCompleted)
+				yield return null;
+			
+			LoadAlert.Instance.Done();
+		}
+	}
 	#endregion
 
 	#region Event Listeners
 	void ProjectSwitchedClients(ProjectListElement element, Client previous)
 	{
 		StartCoroutine(UpdateClients(element,previous));
+	}
+	void DeleteProject(ProjectListElement element)
+	{
+		StartCoroutine(DeleteCoroutine(element));
 	}
 	#endregion
 }

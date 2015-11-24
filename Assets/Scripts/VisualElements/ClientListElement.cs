@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 
 using System.Collections;
+using System.Reflection;
 
 using gametheory.UI;
 
@@ -93,8 +94,11 @@ public class ClientListElement : VisualElement
 		if(NewButton)
 			NewButton.interactable = true;
 	}
-	public override void SetBinding (string propertyName)
+	public override void SetContext (IBindingContext obj)
 	{
+		base.SetContext (obj);
+
+		SetBinding("ProjectCount",new TextBinding(ProjectCount,"{0} Projects"));
 	}
 	#endregion
 
@@ -118,6 +122,8 @@ public class ClientListElement : VisualElement
 		Name.text = client.Name;
 
 		SetProjectCount();
+
+		SetContext(client);
 	}
 	void SetProjectCount()
 	{

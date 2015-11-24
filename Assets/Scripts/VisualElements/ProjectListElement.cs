@@ -13,6 +13,7 @@ public class ProjectListElement : VisualElement
 {
 	#region Events
 	public static event System.Action<ProjectListElement,Client> switchedClient;
+	public static event System.Action<ProjectListElement> deleteProject;
 	#endregion
 
 	#region Constants
@@ -38,6 +39,7 @@ public class ProjectListElement : VisualElement
 	public Button ViewButton;
 	public Button ReportButton;
 	public Button NewButton;
+	public Button DeleteButton;
 
 	public Dropdown ClientDropdown;
 
@@ -125,6 +127,9 @@ public class ProjectListElement : VisualElement
 
 		if(ClosedToggle)
 			ClosedToggle.enabled = display;
+
+		if(DeleteButton)
+			DeleteButton.enabled = display;
 	}
 	protected override void Disabled ()
 	{
@@ -152,6 +157,9 @@ public class ProjectListElement : VisualElement
 
 			if(ClientDropdown)
 				ClientDropdown.interactable = false;
+
+			if(DeleteButton)
+				DeleteButton.interactable = false;
 		}
 	}
 	protected override void Enabled ()
@@ -180,6 +188,9 @@ public class ProjectListElement : VisualElement
 
 			if(ClientDropdown)
 				ClientDropdown.interactable = true;
+
+			if(DeleteButton)
+				DeleteButton.interactable = true;
 		}
 	}
 	#endregion
@@ -251,6 +262,11 @@ public class ProjectListElement : VisualElement
 			StartCoroutine(SaveChanges());
 		}
 	}
+	public void Delete()
+	{
+		if(deleteProject != null)
+			deleteProject(this);
+	}
 	#endregion
 	
 	#region Methods
@@ -277,10 +293,28 @@ public class ProjectListElement : VisualElement
 		{
 			_previousClosed = project.Closed;
 			ClosedToggle.isOn = project.Closed;
+
+			if(!DeleteButton.gameObject.activeSelf)
+				DeleteButton.gameObject.SetActive(true);
 		}
 		else
+		{
 			ClosedToggle.gameObject.SetActive(false);
 
+			if(DeleteButton.gameObject.activeSelf)
+				DeleteButton.gameObject.SetActive(false);
+		}
+
+		SetEditable();
+
+		SetProjectCount();
+	}
+	void SetProjectCount()
+	{
+		ItemCount.text = _project.ItemCount + COUNT_SUFFIX;
+	}
+	void SetEditable()
+	{
 		if(_project.Closed)
 		{
 			Namefield.interactable = false;
@@ -289,12 +323,14 @@ public class ProjectListElement : VisualElement
 			ReportButton.interactable = false;
 			NewButton.interactable = false;
 		}
-
-		SetProjectCount();
-	}
-	void SetProjectCount()
-	{
-		ItemCount.text = _project.ItemCount + COUNT_SUFFIX;
+		else
+		{
+			Namefield.interactable = true;
+			Descriptionfield.interactable = true;
+			ClientDropdown.interactable = true;
+			ReportButton.interactable = true;
+			NewButton.interactable = true;
+		}
 	}
 	#endregion
 
@@ -323,6 +359,8 @@ public class ProjectListElement : VisualElement
 			_previousName = _project.Name;
 			_previousDescription = _project.Description;
 			_previousClosed = _project.Closed;
+
+			SetEditable();
 
 			if(_project.Client != _previousClient && switchedClient != null)
 			{
