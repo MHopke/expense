@@ -3,7 +3,7 @@ using System.Collections;
 
 using Parse;
 
-using gametheory.UI;
+using gametheory;
 
 [ParseClassName("Project")]
 public class Project : ParseObject, IBindingContext

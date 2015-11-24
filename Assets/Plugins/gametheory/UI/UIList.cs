@@ -1,11 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
+
 using System.Collections.Generic;
 
 namespace gametheory.UI
 {
     public class UIList : VisualElement 
     {
+		#region Events
+		public event System.Action<object> itemSelected;
+		#endregion
+
         #region Public Vars
         public bool StartsWithItems;
         public bool ZeroScrollBar;
@@ -22,6 +27,10 @@ namespace gametheory.UI
 
         #region Private Vars
         int _endOfOriginalItems;
+
+		VisualElement _itemPrefab;
+
+		ObservableList<object> _listContext;
         #endregion
 
         #region Overriden Methods
@@ -41,6 +50,16 @@ namespace gametheory.UI
             else
                 ListItems = new List<VisualElement>();
         }
+		protected override void OnCleanUp ()
+		{
+			if(_listContext != null)
+			{
+				_listContext.itemChanged -= ItemChanged;
+				_listContext.cleared -= ListCleared;
+			}
+
+			base.OnCleanUp ();
+		}
         protected override void OnPresent ()
 		{
 			base.OnPresent ();
@@ -50,8 +69,6 @@ namespace gametheory.UI
                 if(!ListItems[i].SkipUIViewActivation)
                     ListItems[i].Present();
             }
-
-            CheckToHideScrollbar();
         }
         protected override void OnRemove ()
 		{
@@ -112,31 +129,46 @@ namespace gametheory.UI
 
             element.Init();
 
+			ListElement temp = element as ListElement;
+			if(temp != null)
+				temp.selected += ItemSelected;
+
             if(_active)
                 element.Present();
             else
                 element.PresentVisuals(false);
-
-            CheckToShowScrollBar();
         }
+		public void AddItem(object obj)
+		{
+			DeactivateEmptyItem();
+
+			VisualElement element = (VisualElement)GameObject.Instantiate(_itemPrefab,Vector3.zero,Quaternion.identity);
+
+			(element.transform as RectTransform).SetParent(Scroll.content,false);
+			ListItems.Add(element);
+			
+			element.Init();
+			
+			ListElement temp = element as ListElement;
+			if(temp != null)
+			{
+				temp.Setup(obj);
+				temp.selected += ItemSelected;
+			}
+			
+			if(_active)
+				element.Present();
+			else
+				element.PresentVisuals(false);
+		}
         public void AddListElements(List<VisualElement> elements)
         {
             DeactivateEmptyItem();
 
             for(int i = 0; i < elements.Count; i++)
             {
-				(elements[i].transform as RectTransform).SetParent(Scroll.content,false);
-                ListItems.Add(elements[i]);
-
-                elements[i].Init();
-
-                if(_active)
-                    elements[i].Present();
-                else
-                    elements[i].PresentVisuals(false);
+				AddListElement(elements[i]);
             }
-
-            CheckToShowScrollBar();
         }
         public void RemoveListElements(int count)
         {
@@ -144,52 +176,71 @@ namespace gametheory.UI
                 return;
 
             int lastItem = ListItems.Count - 1;
+			VisualElement element = null;
+			ListElement temp = null;
+
             for(int i = 0; i < count; i++)
             {
                 lastItem = ListItems.Count - 1;
 
-                ListItems[lastItem].CleanUp();
+				temp = ListItems[lastItem] as ListElement;
+				if(temp != null)
+					temp.selected -= ItemSelected;
 
-                Destroy(ListItems[lastItem].gameObject);
+                element.CleanUp();
+
+                Destroy(element.gameObject);
                 
                 ListItems.RemoveAt(lastItem);
             }
-
-            CheckToHideScrollbar();
         }
         public void RemoveListElement(VisualElement element)
         {
+			VisualElement listItem = null;
+			ListElement temp = null;
             for(int i = 0; i < ListItems.Count; i++)
             {
-                if(ListItems[i] == element)
+				listItem = ListItems[i];
+                if(listItem == element)
                 {
-                    ListItems[i].CleanUp();
-                    Destroy(ListItems[i].gameObject);
+					temp = listItem as ListElement;
+					if(temp != null)
+						temp.selected -= ItemSelected;
+
+                    listItem.CleanUp();
+                    Destroy(listItem.gameObject);
                     ListItems.RemoveAt(i);
                     return;
                 }
             }
-            CheckToHideScrollbar();
         }
         public void RemoveListElement(int index)
         {
+			ListElement temp = ListItems[index] as ListElement;
+			if(temp != null)
+				temp.selected -= ItemSelected;
+
             Destroy(ListItems[index].gameObject);
             ListItems.RemoveAt(index);
-
-            CheckToHideScrollbar();
         }
         public void ClearElements()
         {
+			VisualElement element = null;
+			ListElement temp = null;
             while(ListItems.Count > _endOfOriginalItems)
             {
-                ListItems[ListItems.Count - 1].CleanUp();
+				element = ListItems[ListItems.Count - 1];
+                
+				temp = element as ListElement;
+				if(temp != null)
+					temp.selected -= ItemSelected;
 
-                Destroy(ListItems[ListItems.Count - 1].gameObject);
+				element.CleanUp();
+
+                Destroy(element.gameObject);
                 
                 ListItems.RemoveAt(ListItems.Count - 1);
             }
-
-            CheckToHideScrollbar();
         }
 
         public void SetListItemStates(bool canInteract)
@@ -203,27 +254,37 @@ namespace gametheory.UI
             }
         }
 
-        public void RegisterListChange()
-        {
-            if (HideScrollBar)
-            {
-                if (ScrollBar.Size >= 1f)
-                    ScrollBar.Hide();
-                else
-                    ScrollBar.Show();
-            }
-        }
+		void ItemSelected(object obj)
+		{
+			if(itemSelected != null)
+				itemSelected(obj);
+		}
 
-        void CheckToHideScrollbar()
-        {
-            if (HideScrollBar && ScrollBar.Size >= 1f)
-                ScrollBar.Hide();
-        }
-        void CheckToShowScrollBar()
-        {
-            if (HideScrollBar && ScrollBar.Size > 1f)
-                ScrollBar.Show();
-        }
+		public void SetItemPrefab(VisualElement element)
+		{
+			_itemPrefab = element;
+		}
+
+		public void SetContext(ObservableList<object> list)
+		{
+			_listContext = list;
+			_listContext.itemChanged += ItemChanged;
+			_listContext.cleared += ListCleared;
+		}
         #endregion
+
+		#region Event Listeners
+		void ItemChanged(int index, object obj)
+		{
+			if(obj == null)
+				RemoveListElement(index);
+			else if(ListItems.Count < index)
+				AddItem(obj);
+		}
+		void ListCleared()
+		{
+			ClearElements();
+		}
+		#endregion
     }
 }

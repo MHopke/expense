@@ -177,10 +177,13 @@ namespace gametheory.UI
             Debug.Log(name + " : " + display);
             #endif
         }
-		public virtual void SetContext(IBindingContext obj)
+		public virtual void SetContext(object obj)
 		{
-			_context = obj;
-			_context.propertyChanged += OnPropertyChanged;
+			if(obj is IBindingContext)
+			{
+				_context = obj as IBindingContext;
+				_context.propertyChanged += OnPropertyChanged;
+			}
 		}
 		protected virtual void SetBinding(string propName, Binding binding)
 		{

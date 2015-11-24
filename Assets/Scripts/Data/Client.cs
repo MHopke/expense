@@ -4,7 +4,7 @@ using System.Collections;
 
 using Parse;
 
-using gametheory.UI;
+using gametheory;
 
 [ParseClassName("Client")]
 public class Client : ParseObject, IBindingContext 

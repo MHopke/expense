@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Reflection;
 
+using gametheory;
 using gametheory.UI;
 
 public class ClientListElement : VisualElement 
@@ -94,7 +95,7 @@ public class ClientListElement : VisualElement
 		if(NewButton)
 			NewButton.interactable = true;
 	}
-	public override void SetContext (IBindingContext obj)
+	public override void SetContext (object obj)
 	{
 		base.SetContext (obj);
 
