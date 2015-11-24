@@ -19,6 +19,7 @@ public class Expense : ParseObject
 	const string REIMBURSEMENT = "Reimbursement";
 	public const string PROJECT = "Project";
 	const string USER = "User";
+	const string REIMBUSED = "Reimbursed";
 	#endregion
 
 	#region Constructors
@@ -31,6 +32,13 @@ public class Expense : ParseObject
 	{
 		get { return GetProperty<bool>(BILLABLE); }
 		set { SetProperty<bool>(value, BILLABLE); }
+	}
+
+	[ParseFieldName("reimbursed")]
+	public bool Reimbursed
+	{
+		get { return GetProperty<bool> (REIMBUSED); }
+		set { SetProperty<bool> (value, REIMBUSED); }
 	}
 
 	[ParseFieldName("reimbursement")]
