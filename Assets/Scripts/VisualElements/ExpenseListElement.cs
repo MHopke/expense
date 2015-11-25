@@ -12,6 +12,11 @@ using Parse;
 
 public class ExpenseListElement : VisualElement 
 {
+	#region Events
+	public static event System.Action<ExpenseListElement, Project> switchedProject;
+	public static event System.Action<ExpenseListElement> remove;
+	#endregion
+
 	#region Constants
 	const string VALUE_PREFIX = "$";
 	const string USER_PREFIX = "Submitted by: ";
@@ -26,6 +31,7 @@ public class ExpenseListElement : VisualElement
 	public Image Background;
 
 	public Button PhotoButton;
+	public Button DeleteButton;
 
 	public Toggle Billable;
 	public Toggle Reimbursement;
@@ -41,6 +47,8 @@ public class ExpenseListElement : VisualElement
 	
 	#region Private Vars
 	bool _billable, _reimbursed, _reimbursable;
+
+	int _projectIndex;
 
 	string _name,_description,_valueString, _dateString;
 
@@ -103,6 +111,12 @@ public class ExpenseListElement : VisualElement
 		{
 			PhotoButton.enabled = display;
 			PhotoButton.image.enabled = display;
+		}
+
+		if(DeleteButton)
+		{
+			DeleteButton.enabled = display;
+			DeleteButton.image.enabled = display;
 		}
 
 		if(ProjectDropdown)
@@ -182,12 +196,56 @@ public class ExpenseListElement : VisualElement
 	{
 		ImageUploadAlert.Instance.Open();
 	}
+	public void Delete()
+	{
+		StartCoroutine(DeleteCoroutine());
+	}
 	public void ProjectChanged(int choice)
 	{
+		Project project = Database.Instance.Projects[choice];
+
+		if(_item.Project.ObjectId != project.ObjectId)
+			StartCoroutine(SwitchCoroutines(project));
 	}
 	#endregion
 
 	#region Methods
+	public void SetEditable(bool projectClosed)
+	{
+		if(projectClosed)
+		{
+			Billable.interactable = false;
+			Reimbursement.interactable = false;
+			Namefield.interactable = false;
+			Descriptionfield.interactable = false;
+			Valuefield.interactable = false;
+			Datefield.interactable = false;
+			PhotoButton.interactable = false;
+			
+			if(_item.IsOwner(ParseUser.CurrentUser))
+			{
+				ProjectDropdown.interactable = false;
+				DeleteButton.interactable = false;
+			}
+		}
+		else
+		{
+			Billable.interactable = true;
+			Reimbursement.interactable = true;
+			Namefield.interactable = true;
+			Descriptionfield.interactable = true;
+			Valuefield.interactable = true;
+			Datefield.interactable = true;
+			PhotoButton.interactable = true;
+			
+			if(_item.IsOwner(ParseUser.CurrentUser))
+			{
+				Reimbursed.interactable = true;
+				ProjectDropdown.interactable = true;
+				DeleteButton.interactable = true;
+			}
+		}
+	}
 	void SetData()
 	{
 		_reimbursed = _item.Reimbursed;
@@ -200,8 +258,10 @@ public class ExpenseListElement : VisualElement
 		_valueString = _item.Value.ToString();
 		_date = _item.Date;
 		_dateString = _item.Date.ToShortDateString();
+
+		_projectIndex = Database.Instance.GetProjectIndex(_item.Project);
 	}
-	public void Setup(Expense item, bool projectClosed)
+	public void Setup(Expense item)
 	{
 		_item = item;
 
@@ -219,33 +279,19 @@ public class ExpenseListElement : VisualElement
 		Reimbursement.isOn = item.Reimbursement;
 		Reimbursed.isOn = item.Reimbursed;
 
-		if(projectClosed)
-		{
-			Billable.interactable = false;
-			Reimbursement.interactable = false;
-			Namefield.interactable = false;
-			Descriptionfield.interactable = false;
-			Valuefield.interactable = false;
-			Datefield.interactable = false;
-			PhotoButton.interactable = false;
-		}
-
 		if(item.IsOwner(ParseUser.CurrentUser))
 		{
 			List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
-			for(int index = 0; index < Database.Instance.Clients.Count; index++)
+			for(int index = 0; index < Database.Instance.Projects.Count; index++)
 			{
-				options.Add(new Dropdown.OptionData(Database.Instance.Clients[index].Name));
+				options.Add(new Dropdown.OptionData(Database.Instance.Projects[index].Name));
 			}
 			ProjectDropdown.options = options;
-			ProjectDropdown.value = 0;//Database.Instance.GetClientIndex(_project.Client);
-
-			
-			if(projectClosed)
-				ProjectDropdown.interactable = false;
+			ProjectDropdown.value = Database.Instance.GetProjectIndex(_item.Project);
 		}
 		else
 		{
+			DeleteButton.gameObject.SetActive(false);
 			Reimbursed.interactable = false;
 			ProjectDropdown.gameObject.SetActive(false);
 		}
@@ -327,12 +373,61 @@ public class ExpenseListElement : VisualElement
 			_item.Reimbursed = _reimbursed;
 		}
 	}
+	IEnumerator DeleteCoroutine()
+	{
+		LoadAlert.Instance.StartLoad("Deleting expense...",null,-1);
+
+		Task task = _item.DeleteAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(task.Exception == null)
+		{
+			if(remove != null)
+				remove(this);
+		}
+		else
+			DefaultAlert.Present("Sorry!", "An error occured while trying " +
+				"to delete this expense. Pleae try again later");
+	}
+	IEnumerator SwitchCoroutines(Project project)
+	{
+		Project prevProj = _item.Project;
+		_item.Project = project;
+
+		Task task = _item.SaveAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		if(task.Exception == null)
+		{
+			if(switchedProject != null)
+				switchedProject(this,prevProj);
+		}
+		else
+		{
+			DefaultAlert.Present("Sorry!", "An error occured while trying " +
+			             "to delete this expense. Pleae try again later");
+			_item.Project = prevProj;
+		}
+	}
 	#endregion
 
 	#region Event Listeners
 	public void FileChosen(byte[] data)
 	{
 		StartCoroutine(UploadImage(data));
+	}
+	#endregion
+
+	#region Properties
+	public Expense Item
+	{
+		get { return _item; }
 	}
 	#endregion
 }

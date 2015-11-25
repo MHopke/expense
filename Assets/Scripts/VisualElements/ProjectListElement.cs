@@ -206,6 +206,7 @@ public class ProjectListElement : VisualElement
 	{
 		OveriddenNavigation.Navigation.PushViewOnToStack(ProjectPage.Instance);
 		ProjectPage.Instance.Setup(_project);
+		Database.Instance.CurrentProject = _project;
 		//ClientPage.Instance.Setup(_project);
 	}
 	public void CreateExpense()

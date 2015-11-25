@@ -112,6 +112,7 @@ public class ClientListElement : VisualElement
 	{
 		OveriddenNavigation.Navigation.PushViewOnToStack(ClientPage.Instance);
 		ClientPage.Instance.Setup(_client);
+		Database.Instance.CurrentClient = _client;
 	}
 	#endregion
 

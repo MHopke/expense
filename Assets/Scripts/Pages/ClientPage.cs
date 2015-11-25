@@ -41,6 +41,9 @@ public class ClientPage : UIView
 		ProjectAlert.projectCreated += AddProject;
 		ProjectListElement.switchedClient += ProjectSwitchedClients;
 		ProjectListElement.deleteProject += DeleteProject;
+
+		Database.Instance.ClearExpenses();
+
 		base.OnActivate();
 	}
 	protected override void OnDeactivate ()

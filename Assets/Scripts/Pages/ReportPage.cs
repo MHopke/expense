@@ -67,26 +67,12 @@ public class ReportPage : UIView
 
 			_grandTotal = _billableTotal = _reimbursementTotal = 0.0;
 
-			StartCoroutine(Database.Instance.GetExpenses(project,ProcessExpenses));
+			StartCoroutine(ProcessExpenses());
 		}
 	}
 
-	void ProcessExpenses(IEnumerable<Expense> expenses)
-	{
-		_expenses = new List<Expense>();
-		//Debug.Log(expenses.co
-		foreach(Expense expense in expenses)
-			AddExpense(expense);
-
-
-		GrandTotal.text = DOLLAR + _grandTotal;
-		BillableTotal.text = DOLLAR + _billableTotal;
-		ReimbursementTotal.text = DOLLAR + _reimbursementTotal;
-	}
 	void AddExpense(Expense expense)
 	{
-		_expenses.Add(expense);
-
 		ReportItem element = (ReportItem)
 			GameObject.Instantiate(Prefab,Vector3.zero,Quaternion.identity);
 		
@@ -101,6 +87,26 @@ public class ReportPage : UIView
 			_reimbursementTotal += expense.Value;
 		
 		List.AddListElement(element);
+	}
+	#endregion
+
+	#region Coroutines
+	IEnumerator ProcessExpenses()
+	{
+		_expenses = Database.Instance.Expenses;
+
+		if(_expenses.Count == 0)
+			yield return StartCoroutine(Database.Instance.GetExpenses(_project));
+
+		for(int index = 0; index < _expenses.Count; index++)
+		{
+			AddExpense(_expenses[index]);
+			yield return null;
+		}
+		
+		GrandTotal.text = DOLLAR + _grandTotal;
+		BillableTotal.text = DOLLAR + _billableTotal;
+		ReimbursementTotal.text = DOLLAR + _reimbursementTotal;
 	}
 	#endregion
 

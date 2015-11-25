@@ -14,12 +14,15 @@ public class Database : MonoBehaviour
 	#endregion
 
 	#region Public Vars
+	public Client CurrentClient;
+	public Project CurrentProject;
 	public static Database Instance = null;
 	#endregion
 
 	#region Private Vars
 	List<Client> _clients;
 	List<Project> _projects;
+	List<Expense> _expenseList;
 	#endregion
 
 	#region Unity Methods
@@ -77,6 +80,21 @@ public class Database : MonoBehaviour
 		{
 			if(_clients[index].ObjectId == client.ObjectId)
 				return index;
+		}
+
+		return -1;
+	}
+	public void ClearExpenses()
+	{
+		if(_expenseList != null && _expenseList.Count > 0)
+			_expenseList.Clear();
+	}
+	public int GetProjectIndex(Project project)
+	{
+		for(int index = 0; index < _projects.Count; index++)
+		{
+			if(_projects[index].ObjectId == project.ObjectId)
+			   return index;
 		}
 
 		return -1;
@@ -148,7 +166,7 @@ public class Database : MonoBehaviour
 		if(initialized != null)
 			initialized();
 	}
-	public IEnumerator GetExpenses(Project project, System.Action<IEnumerable<Expense>> callback)
+	public IEnumerator GetExpenses(Project project)
 	{
 		LoadAlert.Instance.StartLoad("Getting Expenses...",null,-1);
 
@@ -167,8 +185,27 @@ public class Database : MonoBehaviour
 		{
 			Debug.Log("error getting expenses:\n" + task.Exception.ToString());
 		}
-		else if(callback != null)
-			callback(task.Result);
+		else
+			_expenseList = task.Result.ToList();
+
+		int sub =0;
+		Project proj = null;
+		Expense exp = null;
+		for(int index =0; index < _projects.Count; index++)
+		{
+			proj = _projects[index];
+
+			for(sub =0; sub < _expenseList.Count; sub++)
+			{
+				exp = _expenseList[sub];
+
+				if(exp.Project.ObjectId == proj.ObjectId)
+				{
+					exp.Project = proj;
+					break;
+				}
+			}
+		}
 	}
 	#endregion
 
@@ -181,13 +218,9 @@ public class Database : MonoBehaviour
 	{
 		get { return _projects; }
 	}
-	public Project CurrentProject
+	public List<Expense> Expenses
 	{
-		get { return null; }
-	}
-	public Client CurrentClient
-	{
-		get { return null; }
+		get { return _expenseList; }
 	}
 	#endregion
 }

@@ -3,8 +3,11 @@ using UnityEngine.UI;
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using gametheory.UI;
+
+using Parse;
 
 public class ProjectPage : UIView 
 {
@@ -37,6 +40,23 @@ public class ProjectPage : UIView
 		ExpenseAlert.createdExpense -= AddExpense;
 		base.OnCleanUp ();
 	}
+	protected override void OnActivate ()
+	{
+		ExpenseListElement.remove += ExpenseRemoved;
+		ExpenseListElement.switchedProject += ExpenseSwitchProject;
+		base.OnActivate ();
+
+		for(int index = 0; index < ExpenseList.ListItems.Count; index++)
+		{
+			(ExpenseList.ListItems[index] as ExpenseListElement).SetEditable(_project.Closed);
+		}
+	}
+	protected override void OnDeactivate ()
+	{
+		ExpenseListElement.remove -= ExpenseRemoved;
+		ExpenseListElement.switchedProject -= ExpenseSwitchProject;
+		base.OnDeactivate ();
+	}
 	#endregion
 
 	#region UI Methods
@@ -57,26 +77,64 @@ public class ProjectPage : UIView
 			Name.text = project.Name;
 			Description.text = project.Description;
 
-			StartCoroutine(Database.Instance.GetExpenses(_project,ProcessExpenses));
+			StartCoroutine(ProcessExpenses());
 		}
 	}
 	#endregion
 
-	#region Methods
-	void ProcessExpenses(IEnumerable<Expense> expenses)
+	#region Coroutines
+	IEnumerator ProcessExpenses()
 	{
-		//Debug.Log(expenses.co
-		foreach(Expense expense in expenses)
-			AddExpense(expense);
+		yield return StartCoroutine(Database.Instance.GetExpenses(_project));
+
+		for(int index =0; index < Database.Instance.Expenses.Count; index++)
+		{
+			AddExpense(Database.Instance.Expenses[index]);
+			yield return null;
+		}
 	}
+	IEnumerator SwitchCoroutine(ExpenseListElement element, Project prevProject)
+	{
+		ExpenseList.RemoveListElement(element);
+
+		prevProject.ItemCount--;
+		element.Item.Project.ItemCount++;
+
+		List<Project> projects = new List<Project>();
+		projects.Add(prevProject);
+		projects.Add(element.Item.Project);
+
+		Task task = projects.SaveAllAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		if(task.Exception != null)
+		{
+			DefaultAlert.Present("Sorry!","An error occured and we " +
+				"could not update the projects' item count");
+		}
+	}
+	#endregion
+
+	#region Event Listeners
 	void AddExpense(Expense expense)
 	{
 		ExpenseListElement element = (ExpenseListElement)
 			GameObject.Instantiate(ExpensePrefab,Vector3.zero,Quaternion.identity);
 
-		element.Setup(expense,_project.Closed);
+		element.Setup(expense);
+		element.SetEditable(_project.Closed);
 
 		ExpenseList.AddListElement(element);
+	}
+	void ExpenseRemoved(ExpenseListElement element)
+	{
+		ExpenseList.RemoveListElement(element);
+	}
+	void ExpenseSwitchProject(ExpenseListElement element, Project prevProject)
+	{
+		StartCoroutine(SwitchCoroutine(element,prevProject));
 	}
 	#endregion
 }
