@@ -281,16 +281,16 @@ public class ProjectListElement : VisualElement
 		Namefield.text = project.Name;
 		Descriptionfield.text = project.Description;
 
-		List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
-		for(int index = 0; index < Database.Instance.Clients.Count; index++)
-		{
-			options.Add(new Dropdown.OptionData(Database.Instance.Clients[index].Name));
-		}
-		ClientDropdown.options = options;
-		ClientDropdown.value = Database.Instance.GetClientIndex(_project.Client);
-
 		if(_project.IsProjectLeader(ParseUser.CurrentUser))
 		{
+			List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();
+			for(int index = 0; index < Database.Instance.Clients.Count; index++)
+			{
+				options.Add(new Dropdown.OptionData(Database.Instance.Clients[index].Name));
+			}
+			ClientDropdown.options = options;
+			ClientDropdown.value = Database.Instance.GetClientIndex(_project.Client);
+
 			_previousClosed = project.Closed;
 			ClosedToggle.isOn = project.Closed;
 
@@ -303,6 +303,8 @@ public class ProjectListElement : VisualElement
 
 			if(DeleteButton.gameObject.activeSelf)
 				DeleteButton.gameObject.SetActive(false);
+
+			ClientDropdown.gameObject.SetActive(false);
 		}
 
 		SetEditable();

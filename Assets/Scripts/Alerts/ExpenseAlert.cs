@@ -92,13 +92,7 @@ public class ExpenseAlert : UIView
 	}
 	public void UploadImage()
 	{
-		#if UNITY_EDITOR
-		UniFileBrowser.use.OpenFileWindow(ImageUploadAlert.Instance.Open);
-		#elif UNITY_IPHONE
-		EtceteraBinding.promptForPhoto(0.2f);
-		#elif UNITY_ANDROID
-		EtceteraAndroid.promptForPictureFromAlbum("");
-		#endif
+		ImageUploadAlert.Instance.Open();
 	}
 	#endregion
 
@@ -109,6 +103,12 @@ public class ExpenseAlert : UIView
 		_item.ACL = new ParseACL();
 		_item.ACL.SetRoleReadAccess(User.CurrentUser.CompanyName,true);
 		_item.ACL.SetRoleWriteAccess(User.CurrentUser.CompanyName,true);
+
+		_item.Billable = false;
+		_item.Reimbursement = false;
+		_item.Reimbursed = false;
+		_item.Description = "";
+		_item.Name = "";
 
 		UIAlertController.Instance.PresentAlert(this);
 	}

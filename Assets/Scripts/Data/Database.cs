@@ -181,5 +181,13 @@ public class Database : MonoBehaviour
 	{
 		get { return _projects; }
 	}
+	public Project CurrentProject
+	{
+		get { return null; }
+	}
+	public Client CurrentClient
+	{
+		get { return null; }
+	}
 	#endregion
 }

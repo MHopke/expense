@@ -74,7 +74,7 @@ public class ProjectPage : UIView
 		ExpenseListElement element = (ExpenseListElement)
 			GameObject.Instantiate(ExpensePrefab,Vector3.zero,Quaternion.identity);
 
-		element.Setup(expense);
+		element.Setup(expense,_project.Closed);
 
 		ExpenseList.AddListElement(element);
 	}

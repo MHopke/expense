@@ -26,6 +26,13 @@ public class Expense : ParseObject
 	public Expense(){}
 	#endregion
 
+	#region Methods
+	public bool IsOwner(ParseUser user)
+	{
+		return User.ObjectId == user.ObjectId;
+	}
+	#endregion
+
 	#region Properties
 	[ParseFieldName("billable")]
 	public bool Billable

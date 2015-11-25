@@ -41,7 +41,7 @@ public class ImageUploadAlert : UIView
 		base.OnInit ();
 		Instance = this;
 #if UNITY_IPHONE
-		EtceteraManager.imagePickerChoseImageEvent += Open;
+		EtceteraManager.imagePickerChoseImageEvent += OpenFile;
         #elif UNITY_ANDROID
         EtceteraAndroidManager.albumChooserSucceededEvent += Open;
 #endif
@@ -50,7 +50,7 @@ public class ImageUploadAlert : UIView
 	{
 		Instance = null;
 #if UNITY_IPHONE
-			EtceteraManager.imagePickerChoseImageEvent -= Open;
+			EtceteraManager.imagePickerChoseImageEvent -= OpenFile;
         #elif UNITY_ANDROID
         EtceteraAndroidManager.albumChooserSucceededEvent -= Open;
 #endif
@@ -71,7 +71,17 @@ public class ImageUploadAlert : UIView
 	#endregion
 
 	#region Methods
-	public void Open(string filePath)
+	public void Open()
+	{
+		#if UNITY_EDITOR
+		UniFileBrowser.use.OpenFileWindow(ImageUploadAlert.Instance.OpenFile);
+		#elif UNITY_IPHONE
+		EtceteraBinding.promptForPhoto(0.2f);
+		#elif UNITY_ANDROID
+		EtceteraAndroid.promptForPictureFromAlbum("");
+		#endif
+	}
+	void OpenFile(string filePath)
 	{
 		UIAlertController.Instance.PresentAlert(this);
         Texture2D tex = LoadImage(filePath);
