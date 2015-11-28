@@ -1,5 +1,7 @@
 using UnityEngine;
+
 using System.Collections;
+using System.Collections.Generic;
 
 using Parse;
 
@@ -19,6 +21,8 @@ public class Project : ParseObject, IBindingContext
 	const string CLIENT = "Client";
 	const string PROJECT_LEADER = "ProjectLeader";
 	const string CLOSED = "Closed";
+	const string SUBMITTED_USERS = "SubmittedUsers";
+	const string INVITED_USERS = "InvitedUsers";
 	#endregion
 
 	#region Constructors
@@ -29,6 +33,11 @@ public class Project : ParseObject, IBindingContext
 	public bool IsProjectLeader(ParseUser User)
 	{
 		return ProjectLeader.ObjectId == User.ObjectId;
+	}
+	public bool CanClose()
+	{
+		return IsProjectLeader(ParseUser.CurrentUser) 
+			&& SubmittedUsers.Count == InvitedUsers.Count;
 	}
 	#endregion
 
@@ -73,6 +82,20 @@ public class Project : ParseObject, IBindingContext
 	{
 		get { return GetProperty<ParseUser>(PROJECT_LEADER); }
 		set { SetProperty<ParseUser>(value,PROJECT_LEADER); }
+	}
+
+	[ParseFieldName("invitedUsers")]
+	public IList<string> InvitedUsers
+	{
+		get { return GetProperty<IList<string>>(INVITED_USERS); }
+		set { SetProperty<IList<string>>(value,INVITED_USERS); }
+	}
+
+	[ParseFieldName("submittedUsers")]
+	public IList<string> SubmittedUsers
+	{
+		get { return GetProperty<IList<string>>(SUBMITTED_USERS); }
+		set { SetProperty<IList<string>>(value,SUBMITTED_USERS); }
 	}
 	#endregion
 }

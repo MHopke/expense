@@ -64,6 +64,9 @@ public class ProjectPage : UIView
 	{
 		ExpenseAlert.Instance.Open(_project);
 	}
+	public void InviteUser()
+	{
+	}
 	#endregion
 
 	#region Methods

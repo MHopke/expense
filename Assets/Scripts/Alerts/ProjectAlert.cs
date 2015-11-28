@@ -61,9 +61,9 @@ public class ProjectAlert : UIView
 	public void Open(Client client)
 	{
 		_project = new Project() { ItemCount = 0, Client = client };
-		_project.ACL = new ParseACL();
+		_project.ACL = new ParseACL(ParseUser.CurrentUser);
 		_project.ACL.SetRoleReadAccess(User.CurrentUser.CompanyName,true);
-		_project.ACL.SetRoleWriteAccess(User.CurrentUser.CompanyName,true);
+		//_project.ACL.SetRoleWriteAccess();
 		_project.ProjectLeader = ParseUser.CurrentUser;
 
 		int selection = -1;
