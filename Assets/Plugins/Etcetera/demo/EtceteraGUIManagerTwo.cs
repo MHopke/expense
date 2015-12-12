@@ -8,7 +8,7 @@ namespace Prime31
 {
 	public class EtceteraGUIManagerTwo : MonoBehaviourGUI
 	{
-#if UNITY_IPHONE
+#if UNITY_IOS
 		public GameObject testPlane;
 		private string imagePath;
 

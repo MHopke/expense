@@ -4,6 +4,7 @@
 <dict>
 	<key>weakLinkFrameworks</key>
 	<array>
+		<string>SafariServices</string>
 		<string>MessageUI</string>
 	</array>
 	<key>dynamicLibraries</key>
@@ -15,6 +16,7 @@
 		<string>AssetsLibrary.framework</string>
 		<string>CoreGraphics.framework</string>
 		<string>MessageUI.framework</string>
+		<string>SafariServices.framework</string>
 	</array>
 	<key>linkerFlags</key>
 	<array/>

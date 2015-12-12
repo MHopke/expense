@@ -8,7 +8,7 @@ namespace Prime31
 {
 	public class EtceteraGUIManagerThree : MonoBehaviourGUI
 	{
-#if UNITY_IPHONE
+#if UNITY_IOS
 		void OnGUI()
 		{
 			beginColumn();

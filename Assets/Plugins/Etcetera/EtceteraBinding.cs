@@ -7,7 +7,7 @@ using System.IO;
 using Prime31;
 
 
-#if UNITY_IPHONE
+#if UNITY_IOS
 namespace Prime31
 {
 	public enum P31RemoteNotificationType
@@ -180,10 +180,7 @@ namespace Prime31
 	    public static void showAlertWithTitleMessageAndButtons( string title, string message, string[] buttons )
 	    {
 	        if( Application.platform == RuntimePlatform.IPhonePlayer )
-			{
-				var buttonArrayList = new ArrayList( buttons );
-				_etceteraShowAlertWithTitleMessageAndButtons( title, message, Prime31.Json.encode( buttonArrayList ) );
-			}
+				_etceteraShowAlertWithTitleMessageAndButtons( title, message, Prime31.Json.encode( buttons ) );
 	    }
 
 
@@ -213,15 +210,27 @@ namespace Prime31
 
 		#region Web, SMS and Mail
 
-	    [DllImport("__Internal")]
-	    private static extern void _etceteraShowWebPage( string url, bool showControls );
+		[DllImport("__Internal")]
+		private static extern void _etceteraShowWebPage( string url, bool showControls );
 
 		// Opens a web view with the url (Url can either be a resource on the web or a local file) and optional controls (back, forward, copy, open in Safari)
-	    public static void showWebPage( string url, bool showControls )
-	    {
-	        if( Application.platform == RuntimePlatform.IPhonePlayer )
+		public static void showWebPage( string url, bool showControls )
+		{
+			if( Application.platform == RuntimePlatform.IPhonePlayer )
 				_etceteraShowWebPage( url, showControls );
-	    }
+		}
+
+
+		[DllImport("__Internal")]
+		private static extern void _etceteraShowWebPageInSafariViewController( string url );
+
+		// iOS 9+. Opens a the SafariViewController with the given URL. If the SafariViewController is not available this will default to calling
+		// showWebPage( url, true )
+		public static void showWebPageInSafariViewController( string url )
+		{
+			if( Application.platform == RuntimePlatform.IPhonePlayer )
+				_etceteraShowWebPageInSafariViewController( url );
+		}
 
 
 	    [DllImport("__Internal")]
@@ -415,7 +424,7 @@ namespace Prime31
 	    [DllImport("__Internal")]
 	    private static extern void _etceteraSetPopoverPoint( float xPos, float yPos );
 
-		// Sets the position from which the popover for prompting for a photo will show when on an iPad
+		// Sets the position from which the popover for prompting for a photo will show when on an iPad. Note that this is in iOS screen space!
 	    public static void setPopoverPoint( float xPos, float yPos )
 	    {
 	        if( Application.platform == RuntimePlatform.IPhonePlayer )
@@ -562,11 +571,8 @@ namespace Prime31
 			var json = Json.encode( parameters );
 			var bytes = System.Text.Encoding.UTF8.GetBytes( json );
 
-	#if UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2
+
 			var headers = new Dictionary<string,string>();
-	#else
-			var headers = new Hashtable();
-	#endif
 			headers.Add( "Content-Type", "application/json" );
 
 			using( var www = new WWW( url, bytes, headers ) )

@@ -66,6 +66,9 @@ public class ProjectPage : UIView
 	}
 	public void InviteUser()
 	{
+		SingleInputAlert.Instance.Present("Add User","Add a user to this project.",
+			"Enter email...",UserEntered,null,true);
+		//_project.ACL.SetReadAccess(
 	}
 	#endregion
 
@@ -118,6 +121,42 @@ public class ProjectPage : UIView
 				"could not update the projects' item count");
 		}
 	}
+	IEnumerator AddUserCoroutine(string email)
+	{
+		LoadAlert.Instance.StartLoad("Adding " + email,null,-1);
+
+		ParseQuery<ParseUser> userQuery = new ParseQuery<ParseUser>().WhereEqualTo("email",email);
+		Task<ParseUser> fetch = userQuery.FirstAsync();
+
+		while(!fetch.IsCompleted)
+			yield return null;
+
+		if(fetch.Exception != null)
+		{
+			LoadAlert.Instance.Done();
+			DefaultAlert.Present("Sorry!","We could not find that user. " +
+				"Make sure you spelled their email correctly.");
+		}
+		else
+		{
+			_project.ACL.SetReadAccess(fetch.Result,true);
+			_project.ACL.SetWriteAccess(fetch.Result,true);
+
+			Task save = _project.SaveAsync();
+
+			while(!save.IsCompleted)
+				yield return null;
+
+			LoadAlert.Instance.Done();
+
+			if(save.Exception != null)
+			{
+				DefaultAlert.Present("Sorry!","The database failed " +
+					"to add that user. Please try again later.");
+			}
+		}
+		//_project.ACL.SetReadAccess(Data
+	}
 	#endregion
 
 	#region Event Listeners
@@ -138,6 +177,10 @@ public class ProjectPage : UIView
 	void ExpenseSwitchProject(ExpenseListElement element, Project prevProject)
 	{
 		StartCoroutine(SwitchCoroutine(element,prevProject));
+	}
+	void UserEntered(string email)
+	{
+		StartCoroutine(AddUserCoroutine(email));
 	}
 	#endregion
 }

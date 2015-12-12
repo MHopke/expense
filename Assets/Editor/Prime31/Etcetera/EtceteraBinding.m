@@ -7,18 +7,11 @@
 //
 #import "EtceteraManager.h"
 #import "P31ActivityView.h"
+//#import "AppControllerPushAdditions.h"
 
 
 //#define INCLUDE_ADDRESS_BOOK_FEATURE 1
 
-
-#if UNITY_VERSION < 420
-	#import "AppController.h"
-	#define APPCONTROLLER_CLASS AppController
-#else
-	#import "UnityAppController.h"
-	#define APPCONTROLLER_CLASS UnityAppController
-#endif
 
 
 // Converts NSString to C style string by way of copy (Mono will free it)
@@ -121,6 +114,15 @@ void _etceteraShowPromptWithTwoFields( const char * title, const char * message,
 void _etceteraShowWebPage( const char * url, bool showControls )
 {
 	[[EtceteraManager sharedManager] showWebControllerWithUrl:GetStringParam( url ) showingControls:showControls];
+}
+
+
+void _etceteraShowWebPageInSafariViewController( const char* url )
+{
+	if( NSClassFromString( @"SFSafariViewController" ) )
+		[[EtceteraManager sharedManager] showSafariViewControllerWithUrl:GetStringParam( url )];
+	else
+		_etceteraShowWebPage( url, YES );
 }
 
 
@@ -341,8 +343,8 @@ void _etceteraSetUrbanAirshipCredentials( const char * appKey, const char * appS
 
 void _etceteraRegisterForRemoteNotifications( int types )
 {
-	if( [APPCONTROLLER_CLASS respondsToSelector:@selector(registerForRemoteNotificationTypes:)] )
-		[APPCONTROLLER_CLASS performSelector:@selector(registerForRemoteNotificationTypes:) withObject:[NSNumber numberWithInt:types]];
+	if( [NSClassFromString( @"AppControllerPushAdditions" ) respondsToSelector:@selector(registerForRemoteNotificationTypes:)] )
+		[NSClassFromString( @"AppControllerPushAdditions" ) performSelector:@selector(registerForRemoteNotificationTypes:) withObject:[NSNumber numberWithInt:types]];
 	else
 		NSLog( @"The Application delegate does not respond to registerForRemoteNotificationTypes:. Did you remove the AppControllerPushAdditions file and forget to readd it?" );
 }
@@ -350,9 +352,9 @@ void _etceteraRegisterForRemoteNotifications( int types )
 
 int _etceteraGetEnabledRemoteNotificationTypes()
 {
-	if( [APPCONTROLLER_CLASS respondsToSelector:@selector(enabledRemoteNotificationTypes)] )
+	if( [NSClassFromString( @"AppControllerPushAdditions" ) respondsToSelector:@selector(enabledRemoteNotificationTypes)] )
 	{
-		NSNumber *num = [APPCONTROLLER_CLASS performSelector:@selector(enabledRemoteNotificationTypes)];
+		NSNumber *num = [NSClassFromString( @"AppControllerPushAdditions" ) performSelector:@selector(enabledRemoteNotificationTypes)];
 		return [num intValue];
 	}
 	else

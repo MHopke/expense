@@ -59,6 +59,12 @@ static P31ActivityView *activityView = nil;
 */
 + (id)newActivityViewWithLabel:(NSString*)labelText width:(NSUInteger)labelWidth;
 {
+	if( activityView )
+	{
+		NSLog( @"an activity view is already present. only once can be shown at a time. aborting." );
+		return nil;
+	}
+
     // Not autoreleased, as it is basically a singleton:
     P31ActivityView *activityView = [[self alloc] initWithLabel:labelText width:labelWidth];
 	
@@ -623,6 +629,12 @@ static UIColor *__actvityLabelFontColor;
 // Creates and adds an activity view centered within the specified view, using the label "Loading...".  Returns the activity view, already added as a subview of the specified view:
 + (id)newActivityViewWithImage:(UIImage*)image
 {
+	if( activityView )
+	{
+		NSLog( @"an activity view is already present. only once can be shown at a time. aborting." );
+		return nil;
+	}
+
 	return [self newActivityViewWithImage:image];
 }
 
@@ -630,6 +642,12 @@ static UIColor *__actvityLabelFontColor;
 // Creates and adds an activity view centered within the specified view, using the specified label.  Returns the activity view, already added as a subview of the specified view:
 + (id)newActivityViewWithLabel:(NSString*)labelText withImage:(UIImage*)image
 {
+	if( activityView )
+	{
+		NSLog( @"an activity view is already present. only once can be shown at a time. aborting." );
+		return nil;
+	}
+
 	return [self newActivityViewWithLabel:labelText width:0 withImage:image];
 }
 
@@ -637,6 +655,12 @@ static UIColor *__actvityLabelFontColor;
 // Creates and adds an activity view centered within the specified view, using the specified label and a fixed label width.  The fixed width is useful if you want to change the label text while the view is visible.  Returns the activity view, already added as a subview of the specified view:
 + (id)newActivityViewWithLabel:(NSString*)labelText width:(NSUInteger)labelWidth withImage:(UIImage*)image
 {
+	if( activityView )
+	{
+		NSLog( @"an activity view is already present. only once can be shown at a time. aborting." );
+		return nil;
+	}
+
 	P31ImageActivityView *activityView = [[self alloc] initWithLabel:labelText width:labelWidth withImage:image];
 	[activityView setupActivityIndicatorAndAnimateShow];
 	

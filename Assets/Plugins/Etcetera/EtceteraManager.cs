@@ -10,7 +10,7 @@ namespace Prime31
 {
 	public class EtceteraManager : AbstractManager
 	{
-#if UNITY_IPHONE
+#if UNITY_IOS
 		// Fired whenever any full screen view controller is dismissed
 		public static event Action dismissingViewControllerEvent;
 	

@@ -71,6 +71,8 @@ typedef enum
 // P31WebController
 - (void)showWebControllerWithUrl:(NSString*)url showingControls:(BOOL)showControls;
 
+- (void)showSafariViewControllerWithUrl:(NSString*)url;
+
 
 // Mail
 - (BOOL)isEmailAvailable;

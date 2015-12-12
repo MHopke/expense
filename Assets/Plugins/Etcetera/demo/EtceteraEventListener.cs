@@ -7,7 +7,7 @@ namespace Prime31
 {
 	public class EtceteraEventListener : MonoBehaviour
 	{
-#if UNITY_IPHONE
+#if UNITY_IOS
 		void OnEnable()
 		{
 			// Listen to all events for illustration purposes

@@ -7,23 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-
-#if UNITY_VERSION < 420
-
-#import "AppController.h"
-#define APPCONTROLLER_CLASS AppController
-@interface AppController(PushAdditions)
-
-#else
-
-#import "UnityAppController.h"
-#define APPCONTROLLER_CLASS UnityAppController
-@interface UnityAppController(PushAdditions)
-
-#endif
+#include "AppDelegateListener.h"
 
 
+@interface AppControllerPushAdditions : NSObject<AppDelegateListener>
 
++ (AppControllerPushAdditions*)sharedInstance;
 
 + (void)registerForRemoteNotificationTypes:(NSNumber*)types;
 

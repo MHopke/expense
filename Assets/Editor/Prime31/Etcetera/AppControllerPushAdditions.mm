@@ -11,36 +11,39 @@
 
 
 void UnitySendMessage( const char * className, const char * methodName, const char * param );
-void UnitySendDeviceToken( NSData* deviceToken );
-void UnitySendRemoteNotification( NSDictionary* notification );
-void UnitySendRemoteNotificationError( NSError* error );
-void UnitySendLocalNotification( UILocalNotification* notification );
 
 
-#if UNITY_VERSION < 420
-
-@implementation AppController(PushAdditions)
-
-#else
-
-@implementation UnityAppController(PushAdditions)
-
-#endif
-
+@implementation AppControllerPushAdditions
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark - Class methods
 
 + (void)load
 {
-	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidFinishLaunchingNotification:) name:UIApplicationDidFinishLaunchingNotification object:nil];
+	UnityRegisterAppDelegateListener( [self sharedInstance] );
+	[[NSNotificationCenter defaultCenter] addObserver:[self sharedInstance]
+											 selector:@selector(applicationDidFinishLaunchingNotification:)
+												 name:UIApplicationDidFinishLaunchingNotification object:nil];
 }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark - NSNotifications
++ (AppControllerPushAdditions*)sharedInstance
+{
+	static AppControllerPushAdditions *sharedInstance;
+	static dispatch_once_t onceToken;
+	dispatch_once( &onceToken, ^{
+		sharedInstance = [[self alloc] init];
+	});
 
-+ (void)applicationDidFinishLaunchingNotification:(NSNotification*)note
+	return sharedInstance;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - NSNotification
+
+- (void)applicationDidFinishLaunchingNotification:(NSNotification*)note
 {
 	if( note.userInfo )
 	{
@@ -52,8 +55,7 @@ void UnitySendLocalNotification( UILocalNotification* notification );
 			dispatch_time_t popTime = dispatch_time( DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC) );
 			dispatch_after( popTime, dispatch_get_main_queue(), ^
 			{
-				APPCONTROLLER_CLASS *appCon = (APPCONTROLLER_CLASS*)[UIApplication sharedApplication].delegate;
-				[appCon handleNotification:remoteNotificationDictionary isLaunchNotification:YES];
+				[self handleNotification:remoteNotificationDictionary isLaunchNotification:YES];
 			});
 		}
 
@@ -65,13 +67,97 @@ void UnitySendLocalNotification( UILocalNotification* notification );
 			dispatch_time_t popTime = dispatch_time( DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC) );
 			dispatch_after( popTime, dispatch_get_main_queue(), ^
 			{
-				APPCONTROLLER_CLASS *appCon = (APPCONTROLLER_CLASS*)[UIApplication sharedApplication].delegate;
-				[appCon handleLocalNotification:localNotification isLaunchNotification:YES];
+				[self handleLocalNotification:localNotification isLaunchNotification:YES];
 			});
 		}
 	}
 }
 
+
+- (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSNotification*)notification
+{
+	NSLog( @"didRegisterForRemoteNotificationsWithDeviceToken: %@", notification.userInfo );
+	NSData *deviceToken = (NSData*)notification.userInfo;
+
+	NSString *deviceTokenString = [[[[deviceToken description]
+									 stringByReplacingOccurrencesOfString:@"<" withString:@""]
+									stringByReplacingOccurrencesOfString:@">" withString:@""]
+								   stringByReplacingOccurrencesOfString:@" " withString:@""];
+
+	UnitySendMessage( "EtceteraManager", "remoteRegistrationDidSucceed", [deviceTokenString UTF8String] );
+
+	// If this is a user deregistering for notifications, dont proceed past this point
+	if( [AppControllerPushAdditions enabledRemoteNotificationTypes] == 0 )
+	{
+		NSLog( @"Notifications are disabled for this application. Not registering with Urban Airship" );
+		return;
+	}
+
+	// Grab the Urban Airship info from the info.plist file
+	NSString *appKey = [EtceteraManager sharedManager].urbanAirshipAppKey;
+	NSString *appSecret = [EtceteraManager sharedManager].urbanAirshipAppSecret;
+	NSString *alias = [EtceteraManager sharedManager].urbanAirshipAlias;
+
+	if( !appKey || !appSecret )
+		return;
+
+	// Register the deviceToken with Urban Airship
+	NSString *UAServer = @"https://go.urbanairship.com";
+	NSString *urlString = [NSString stringWithFormat:@"%@%@%@/", UAServer, @"/api/device_tokens/", deviceTokenString];
+	NSURL *url = [NSURL URLWithString:urlString];
+
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+	[request setHTTPMethod:@"PUT"];
+
+	// handle the alias if we are sending one
+	if( alias )
+	{
+		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+		NSDictionary *dict = [NSDictionary dictionaryWithObject:alias forKey:@"alias"];
+		NSData *data = [[EtceteraManager jsonFromObject:dict] dataUsingEncoding:NSUTF8StringEncoding];
+		[request setHTTPBody:data];
+	}
+
+	// Authenticate to the server
+	[request addValue:[NSString stringWithFormat:@"Basic %@",
+					   [self base64forData:[[NSString stringWithFormat:@"%@:%@",
+											 appKey,
+											 appSecret] dataUsingEncoding: NSUTF8StringEncoding]]] forHTTPHeaderField:@"Authorization"];
+
+	[[NSURLConnection connectionWithRequest:request delegate:self] start];
+	[request release];
+}
+
+
+- (void)didFailToRegisterForRemoteNotificationsWithError:(NSNotification*)notification
+{
+	NSLog( @"didFailToRegisterForRemoteNotificationsWithError: %@", notification.userInfo );
+	NSError *error = (NSError*)notification.userInfo;
+	UnitySendMessage( "EtceteraManager", "remoteRegistrationDidFail", error.localizedDescription.UTF8String );
+}
+
+
+- (void)didReceiveRemoteNotification:(NSNotification*)notification
+{
+	NSLog( @"didReceiveRemoteNotification" );
+
+	[self handleNotification:notification.userInfo isLaunchNotification:[UIApplication sharedApplication].applicationState == UIApplicationStateInactive];
+
+	Class klass = NSClassFromString( @"GPlayRTRoomDelegate" );
+	if( [klass respondsToSelector:@selector(handleRemoteNotification:)] )
+		[klass performSelector:@selector(handleRemoteNotification:) withObject:notification.userInfo];
+}
+
+
+- (void)didReceiveLocalNotification:(NSNotification*)notification
+{
+	[self handleLocalNotification:(UILocalNotification*)notification.userInfo isLaunchNotification:[UIApplication sharedApplication].applicationState == UIApplicationStateInactive];
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Public API
 
 + (void)registerForRemoteNotificationTypes:(NSNumber*)types
 {
@@ -111,6 +197,10 @@ void UnitySendLocalNotification( UILocalNotification* notification );
 	return [NSNumber numberWithInt:val];
 }
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - Private
 
 // From: http://www.cocoadev.com/index.pl?BaseSixtyFour
 - (NSString*)base64forData:(NSData*)theData
@@ -184,96 +274,6 @@ void UnitySendLocalNotification( UILocalNotification* notification );
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark UIApplicationDelegate
-
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
-
-- (void)application:(UIApplication*)application didRegisterUserNotificationSettings:(UIUserNotificationSettings*)notificationSettings
-{
-	[application registerForRemoteNotifications];
-}
-
-#endif
-
-
-- (void)application:(UIApplication*)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken
-{
-	UnitySendDeviceToken( deviceToken );
-
-	NSString *deviceTokenString = [[[[deviceToken description]
-									 stringByReplacingOccurrencesOfString:@"<" withString:@""]
-									stringByReplacingOccurrencesOfString:@">" withString:@""]
-								   stringByReplacingOccurrencesOfString:@" " withString:@""];
-
-	UnitySendMessage( "EtceteraManager", "remoteRegistrationDidSucceed", [deviceTokenString UTF8String] );
-
-	// If this is a user deregistering for notifications, dont proceed past this point
-	if( [APPCONTROLLER_CLASS enabledRemoteNotificationTypes] == 0 )
-	{
-		NSLog( @"Notifications are disabled for this application. Not registering with Urban Airship" );
-		return;
-	}
-
-	// Grab the Urban Airship info from the info.plist file
-	NSString *appKey = [EtceteraManager sharedManager].urbanAirshipAppKey;
-	NSString *appSecret = [EtceteraManager sharedManager].urbanAirshipAppSecret;
-	NSString *alias = [EtceteraManager sharedManager].urbanAirshipAlias;
-
-	if( !appKey || !appSecret )
-		return;
-
-    // Register the deviceToken with Urban Airship
-    NSString *UAServer = @"https://go.urbanairship.com";
-    NSString *urlString = [NSString stringWithFormat:@"%@%@%@/", UAServer, @"/api/device_tokens/", deviceTokenString];
-    NSURL *url = [NSURL URLWithString:urlString];
-
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
-    [request setHTTPMethod:@"PUT"];
-
-	// handle the alias if we are sending one
-	if( alias )
-	{
-		[request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-		NSDictionary *dict = [NSDictionary dictionaryWithObject:alias forKey:@"alias"];
-		NSData *data = [[EtceteraManager jsonFromObject:dict] dataUsingEncoding:NSUTF8StringEncoding];
-		[request setHTTPBody:data];
-	}
-
-    // Authenticate to the server
-    [request addValue:[NSString stringWithFormat:@"Basic %@",
-                       [self base64forData:[[NSString stringWithFormat:@"%@:%@",
-											 appKey,
-											 appSecret] dataUsingEncoding: NSUTF8StringEncoding]]] forHTTPHeaderField:@"Authorization"];
-
-    [[NSURLConnection connectionWithRequest:request delegate:self] start];
-	[request release];
-}
-
-
-- (void)application:(UIApplication*)application didFailToRegisterForRemoteNotificationsWithError:(NSError*)error
-{
-	UnitySendRemoteNotificationError( error );
-
-	UnitySendMessage( "EtceteraManager", "remoteRegistrationDidFail", [[error localizedDescription] UTF8String] );
-	NSLog( @"remoteRegistrationDidFail: %@", error );
-}
-
-
-- (void)application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary*)userInfo
-{
-	[self handleNotification:userInfo isLaunchNotification:[UIApplication sharedApplication].applicationState == UIApplicationStateInactive];
-	UnitySendRemoteNotification( userInfo );
-}
-
-
-- (void)application:(UIApplication*)application didReceiveLocalNotification:(UILocalNotification*)notification
-{
-	[self handleLocalNotification:notification isLaunchNotification:[UIApplication sharedApplication].applicationState == UIApplicationStateInactive];
-    UnitySendLocalNotification( notification );
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark NSURLConnection
 
 - (void)connection:(NSURLConnection*)theConnection didReceiveResponse:(NSURLResponse*)response
@@ -294,6 +294,34 @@ void UnitySendLocalNotification( UILocalNotification* notification );
 
 
 @end
+
+
+
+
+
+
+#import "UnityAppController.h"
+
+
+// Overrides iOS 8+ notification setup to properly work on iOS < 8 and 8+
+@interface UnityAppController(PushFixes)
+@end
+
+
+@implementation UnityAppController(PushFixes)
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 80000
+
+- (void)application:(UIApplication*)application didRegisterUserNotificationSettings:(UIUserNotificationSettings*)notificationSettings
+{
+	[application registerForRemoteNotifications];
+}
+
+#endif
+
+@end
+
+
 
 
 

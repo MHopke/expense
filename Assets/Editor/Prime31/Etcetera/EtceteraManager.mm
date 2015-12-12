@@ -15,6 +15,10 @@
 #include <net/if_dl.h>
 #import <CommonCrypto/CommonDigest.h>
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 90000
+#include <SafariServices/SafariServices.h>
+#endif
+
 
 #if UNITY_VERSION < 500
 void UnityPause( bool pause );
@@ -190,7 +194,7 @@ UIColor * ColorFromHex( int hexcolor )
 		viewController.modalPresentationStyle = UIModalPresentationFormSheet;
 	
 	// show the view controller
-	[vc presentModalViewController:viewController animated:YES];
+	[vc presentViewController:viewController animated:YES completion:nil];
 }
 
 
@@ -205,7 +209,7 @@ UIColor * ColorFromHex( int hexcolor )
 		return;
 	
 	// dismiss the view controller
-	[vc dismissModalViewControllerAnimated:YES];
+	[vc dismissViewControllerAnimated:YES completion:nil];
 
 	// remove the wrapper view controller
 	[self performSelector:@selector(removeAndReleaseViewControllerWrapper) withObject:nil afterDelay:1.0];
@@ -335,12 +339,24 @@ UIColor * ColorFromHex( int hexcolor )
 - (void)showWebControllerWithUrl:(NSString*)url showingControls:(BOOL)showControls
 {
 	UnityPause( true );
-	
+
 	P31WebController *webCon = [[P31WebController alloc] initWithUrl:url showControls:showControls];
 	UINavigationController *navCon = [[UINavigationController alloc] initWithRootViewController:webCon];
 	[self showViewControllerModallyInWrapper:navCon];
 	[navCon release];
 	[webCon release];
+}
+
+
+- (void)showSafariViewControllerWithUrl:(NSString*)url
+{
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 90000
+	UnityPause( true );
+
+	SFSafariViewController* vc = [[[SFSafariViewController alloc] initWithURL:[NSURL URLWithString:url]] autorelease];
+	vc.delegate = (id<SFSafariViewControllerDelegate>)self;
+	[UnityGetGLViewController() presentViewController:vc animated:YES completion:nil];
+#endif
 }
 
 
@@ -574,7 +590,7 @@ UIColor * ColorFromHex( int hexcolor )
 	picker.assetsFilter = [ALAssetsFilter allAssets];
 	
 	UnityPause( true );
-	[UnityGetGLViewController() presentModalViewController:picker animated:YES];
+	[UnityGetGLViewController() presentViewController:picker animated:YES completion:nil];
 }
 
 
@@ -657,6 +673,17 @@ UIColor * ColorFromHex( int hexcolor )
 	[UIView beginAnimations:nil context:NULL];
 	inlineWebView.frame = frame;
 	[UIView commitAnimations];
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark - SFSafariViewControllerDelegate
+
+- (void)safariViewControllerDidFinish:(UIViewController*)controller
+{
+	[UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
+	UnityPause( NO );
 }
 
 
