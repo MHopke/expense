@@ -108,8 +108,14 @@ public class ProjectListElement : VisualElement
 		
 		if(ReportButton)
 		{
-			ReportButton.enabled = display;
+			if(!display)
+				ReportButton.interactable = display;
+			else if(_project != null && _project.CanGenerateReport)
+				ReportButton.interactable = display;
+			else
+				ReportButton.interactable = false;
 			
+			ReportButton.enabled = display;
 			if(ReportButton.image)
 				ReportButton.image.enabled = display;
 		}
@@ -307,6 +313,9 @@ public class ProjectListElement : VisualElement
 
 			ClientDropdown.gameObject.SetActive(false);
 		}
+
+		if(_project.CanGenerateReport)
+			ReportButton.interactable = true;
 
 		SetEditable();
 

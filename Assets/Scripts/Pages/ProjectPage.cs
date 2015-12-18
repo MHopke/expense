@@ -9,13 +9,21 @@ using gametheory.UI;
 
 using Parse;
 
-public class ProjectPage : UIView 
+public class ProjectPage : MasterDetailPage 
 {
+	#region Constants
+	const string SUBMIT = "Close Expenses";
+	const string OPEN = "Reopen Expenses";
+	#endregion
+
 	#region Public Vars
 	public Text Name;
 	public Text Description;
+	public Text SubmitText;
 
 	public UIList ExpenseList;
+
+	public ExtendedButton AddUserButton;
 
 	public ExpenseListElement ExpensePrefab;
 	
@@ -70,6 +78,13 @@ public class ProjectPage : UIView
 			"Enter email...",UserEntered,null,true);
 		//_project.ACL.SetReadAccess(
 	}
+	public void Submit()
+	{
+		if(_project.SubmittedUsers.Contains(User.CurrentParseUser.ObjectId))
+			StartCoroutine(ReopenCoroutine());
+		else
+			StartCoroutine(SubmitCoroutine());
+	}
 	#endregion
 
 	#region Methods
@@ -83,8 +98,16 @@ public class ProjectPage : UIView
 			Name.text = project.Name;
 			Description.text = project.Description;
 
+			if(_project.SubmittedUsers.Contains(User.CurrentParseUser.ObjectId))
+				SubmitText.text = OPEN;
+			else
+				SubmitText.text = SUBMIT;
+
 			StartCoroutine(ProcessExpenses());
 		}
+
+		if(_project.ProjectLeader.ObjectId ==  User.CurrentParseUser.ObjectId)
+			AddUserButton.Present();
 	}
 	#endregion
 
@@ -141,6 +164,7 @@ public class ProjectPage : UIView
 		{
 			_project.ACL.SetReadAccess(fetch.Result,true);
 			_project.ACL.SetWriteAccess(fetch.Result,true);
+			_project.UserCount++;
 
 			Task save = _project.SaveAsync();
 
@@ -156,6 +180,40 @@ public class ProjectPage : UIView
 			}
 		}
 		//_project.ACL.SetReadAccess(Data
+	}
+	IEnumerator ReopenCoroutine()
+	{
+		LoadAlert.Instance.StartLoad("Marking your expenses as closed.");
+		_project.SubmittedUsers.Remove(User.CurrentParseUser.ObjectId);
+
+		Task task = _project.SaveAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(task.Exception != null)
+			DefaultAlert.Present("Sorry!","The database failed to reopen your expenses.");
+		else
+			SubmitText.text = SUBMIT;
+	}
+	IEnumerator SubmitCoroutine()
+	{
+		LoadAlert.Instance.StartLoad("Marking your expenses as opened.");
+		_project.SubmittedUsers.Add(User.CurrentParseUser.ObjectId);
+
+		Task task = _project.SaveAsync();
+
+		while(!task.IsCompleted)
+			yield return null;
+
+		LoadAlert.Instance.Done();
+
+		if(task.Exception != null)
+			DefaultAlert.Present("Sorry!","The database failed to close your expenses.");
+		else
+			SubmitText.text = OPEN;
 	}
 	#endregion
 

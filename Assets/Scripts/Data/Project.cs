@@ -18,6 +18,7 @@ public class Project : ParseObject, IBindingContext
 	const string NAME = "Name";
 	const string DESCRIPTION = "Description";
 	const string ITEM_COUNT = "ItemCount";
+	const string USER_COUNT = "UserCount";
 	const string CLIENT = "Client";
 	const string PROJECT_LEADER = "ProjectLeader";
 	const string CLOSED = "Closed";
@@ -49,6 +50,11 @@ public class Project : ParseObject, IBindingContext
 		set { SetProperty<bool>(value,CLOSED); }
 	}
 
+	public bool CanGenerateReport
+	{
+		get { return UserCount == SubmittedUsers.Count; }
+	}
+
 	[ParseFieldName("name")]
 	public string Name
 	{
@@ -68,6 +74,13 @@ public class Project : ParseObject, IBindingContext
 	{
 		get { return GetProperty<int>(ITEM_COUNT); }
 		set { SetProperty<int>(value,ITEM_COUNT); }
+	}
+
+	[ParseFieldName("userCount")]
+	public int UserCount
+	{
+		get { return GetProperty<int>(USER_COUNT); }
+		set { SetProperty<int>(value,USER_COUNT); }
 	}
 
 	[ParseFieldName("client")]

@@ -9,12 +9,10 @@ using Parse;
 
 using gametheory.UI;
 
-public class HomePage : UIView 
+public class HomePage : MasterDetailPage 
 {
 	#region Constants
 	const string FROM_EMAIL = "gametheoryco@gmail.com";
-	const string MENU_IN = "MenuIn";
-	const string MENU_OUT = "MenuOut";
 
 	const int PASSWORD_LENGTH = 8;
 	#endregion
@@ -29,7 +27,7 @@ public class HomePage : UIView
 	#endregion
 
 	#region Private Vars
-	bool _pulledData, _menuIn;
+	bool _pulledData;
 	#endregion
 
 	#region Overidden Methods
@@ -61,15 +59,7 @@ public class HomePage : UIView
 		SingleInputAlert.Instance.Present("Invite Teammate","Enter the " +
 			"email of the person you'd like to invite.","",EmailEntered,null,true);
 	}
-	public void Menu()
-	{
-		if(_menuIn)
-			Animator.SetTrigger(MENU_OUT);
-		else
-			Animator.SetTrigger(MENU_IN);
 
-		_menuIn = !_menuIn;
-	}
 	#endregion
 
 	#region Methods

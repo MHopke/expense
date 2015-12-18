@@ -60,7 +60,7 @@ public class ProjectAlert : UIView
 	#region Methods
 	public void Open(Client client)
 	{
-		_project = new Project() { ItemCount = 0, Client = client };
+		_project = new Project() { ItemCount = 0, UserCount = 1, Client = client, Closed = false };
 		_project.ACL = new ParseACL(ParseUser.CurrentUser);
 		_project.ACL.SetRoleReadAccess(User.CurrentUser.CompanyName,true);
 		//_project.ACL.SetRoleWriteAccess();

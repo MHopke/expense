@@ -162,5 +162,9 @@ public class User : MonoBehaviour
 		get { return (string)ParseUser.CurrentUser[NAME]; }
 		set { ParseUser.CurrentUser[NAME] = value; }
 	}
+	public static ParseUser CurrentParseUser
+	{
+		get { return ParseUser.CurrentUser; }
+	}
 	#endregion
 }
